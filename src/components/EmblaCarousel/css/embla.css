@@ -1,0 +1,72 @@
+.embla {
+  max-width: 70%;
+  position: relative;
+}
+
+.embla__viewport {
+  overflow: hidden;
+  position: relative;
+}
+
+.embla__container {
+  display: flex;
+  backface-visibility: hidden;
+  touch-action: pan-y pinch-zoom;
+}
+
+.embla__slide {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 100%;
+  align-items: center;
+  padding-left: 10px; /* half of gap */
+}
+
+@media (min-width: 750px) {
+  .embla__slide {
+    flex: 0 0 50%;
+  }
+}
+@media (min-width: 1100px) {
+  .embla__slide {
+    flex: 0 0 calc(100% / 3);
+  }
+}
+
+@media (min-width: 1200px) {
+  .embla__slide {
+    flex: 0 0 calc(100% / 4);
+  }
+}
+
+.embla__button--prev,
+.embla__button--next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 999;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
+
+.embla__button--prev {
+  left: -50px; /* distance from left */
+}
+
+.embla__button--next {
+  right: -50px; /* distance from right */
+}
+
+.embla__button--prev svg,
+.embla__button--next svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}

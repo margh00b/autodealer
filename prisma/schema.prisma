@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Make {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  popular  Boolean   @default(false)
+  models   Model[]
+  vehicles Vehicle[]
+}
+
+model Model {
+  id       Int       @id @default(autoincrement())
+  name     String
+  makeId   Int
+  popular  Boolean   @default(false)
+  make     Make      @relation(fields: [makeId], references: [id])
+  vehicles Vehicle[]
+
+  @@unique([name, makeId])
+}
+
+model Vehicle {
+  id               Int      @id @default(autoincrement())
+  vin_number       String   @unique
+  stock_NO         String?
+  model_year       Int
+  trim             String?
+  sell_price       Float
+  odometer         Int
+  cover_image      String?
+  body_style       String?
+  doors            Int?
+  drive_type       String?
+  engine_size      Float?
+  engine_cylinders Int?
+  fuel_type        String?
+  city_fuel        Float?
+  hwy_fuel         Float?
+  horse_power      Int?
+  low_msrp         Float?
+  high_msrp        Float?
+  title_status     String?
+  comment          String?
+  tag_name         String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  makeId           Int
+  modelId          Int
+  make             Make     @relation(fields: [makeId], references: [id])
+  model            Model    @relation(fields: [modelId], references: [id])
+}
