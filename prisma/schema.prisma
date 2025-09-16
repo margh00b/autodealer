@@ -29,30 +29,61 @@ model Model {
 model Vehicle {
   id               Int      @id @default(autoincrement())
   vin_number       String   @unique
-  stock_NO         String?
   model_year       Int
   trim             String?
-  sell_price       Float
+  
+  // Pricing
+  listed_price     Float    
+  expected_price   Float?  
+  
+  // status
+  status           String?  // e.g., OPEN, SOLD
+  
+  // Basic vehicle details
   odometer         Int
-  cover_image      String?
-  body_style       String?
+  body_type        String?
   doors            Int?
-  drive_type       String?
-  engine_size      Float?
-  engine_cylinders Int?
-  fuel_type        String?
-  city_fuel        Float?
-  hwy_fuel         Float?
+  drive_type       String?  // Front-Wheel Drive, AWD, etc.
+  transmission     String?  // Automatic, Manual, CVT
+  engine           String?  // e.g. "2.5L I4 Hybrid"
   horse_power      Int?
-  low_msrp         Float?
-  high_msrp        Float?
-  title_status     String?
+  
+  // Fuel & battery
+  fuel_type        String?
+  fuel_capacity    Float?   // liters
+  city_fuel        Float?   // L/100km
+  hwy_fuel         Float?   // L/100km
+  combined_fuel    Float?   // L/100km
+  battery_capacity String?  // for EV/Hybrid, e.g. "1 kWh"
+  
+  // Colors
+  exterior_color   String?
+  interior_color   String?
+  
+  // Measurements
+  front_legroom    Float?   // mm
+  back_legroom     Float?   // mm
+  cargo_volume     Float?   // liters
+  // Features
+  safety_features         String[]
+  options          String[]
+  // Misc metadata
   comment          String?
-  tag_name         String?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
+  
+  // Relations
   makeId           Int
   modelId          Int
   make             Make     @relation(fields: [makeId], references: [id])
   model            Model    @relation(fields: [modelId], references: [id])
+  images           VehicleImage[]
+}
+
+model VehicleImage {
+  id        Int     @id @default(autoincrement())
+  url       String  // Cloudinary secure URL
+  key       String  
+  vehicleId Int
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
 }
