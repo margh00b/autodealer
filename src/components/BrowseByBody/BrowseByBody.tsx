@@ -27,7 +27,6 @@ export default function BrowseByBody() {
   return (
     <div>
       <EmblaCarousel slides={SLIDES} options={OPTIONS} />
-      <button onClick={() => handleTest()}>Test R2</button>
     </div>
   );
 }

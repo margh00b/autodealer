@@ -2,365 +2,331 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useFileUpload } from "@/hooks/useFileUpload";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function DashboardPage() {
-  const { uploadFile, uploadState } = useFileUpload();
+export default function VehicleDashboard() {
+  
 
-  const [formData, setFormData] = useState({
-    vin_number: "",
-    model_year: "",
-    trim: "",
-    listed_price: "",
-    expected_price: "",
-    status: "OPEN",
-    odometer: "",
-    body_type: "",
-    doors: "",
-    drive_type: "",
-    transmission: "",
-    engine: "",
-    horse_power: "",
-    fuel_type: "",
-    fuel_capacity: "",
-    city_fuel: "",
-    hwy_fuel: "",
-    combined_fuel: "",
-    battery_capacity: "",
-    exterior_color: "",
-    interior_color: "",
-    front_legroom: "",
-    back_legroom: "",
-    cargo_volume: "",
-    safety_features: "",
-    options: "",
-    comment: "",
-    makeId: "",
-    modelId: "",
-  });
 
   const [images, setImages] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setImages(Array.from(e.target.files));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Vehicle creation and image uploads (same as before)
-      const vehicleRes = await fetch("/api/vehicles/vehicle-data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          model_year: parseInt(formData.model_year),
-          listed_price: parseFloat(formData.listed_price),
-          expected_price: formData.expected_price
-            ? parseFloat(formData.expected_price)
-            : undefined,
-          odometer: parseInt(formData.odometer),
-          doors: formData.doors ? parseInt(formData.doors) : undefined,
-          horse_power: formData.horse_power
-            ? parseInt(formData.horse_power)
-            : undefined,
-          fuel_capacity: formData.fuel_capacity
-            ? parseFloat(formData.fuel_capacity)
-            : undefined,
-          city_fuel: formData.city_fuel
-            ? parseFloat(formData.city_fuel)
-            : undefined,
-          hwy_fuel: formData.hwy_fuel
-            ? parseFloat(formData.hwy_fuel)
-            : undefined,
-          combined_fuel: formData.combined_fuel
-            ? parseFloat(formData.combined_fuel)
-            : undefined,
-          front_legroom: formData.front_legroom
-            ? parseFloat(formData.front_legroom)
-            : undefined,
-          back_legroom: formData.back_legroom
-            ? parseFloat(formData.back_legroom)
-            : undefined,
-          cargo_volume: formData.cargo_volume
-            ? parseFloat(formData.cargo_volume)
-            : undefined,
-          safety_features: formData.safety_features
-            ? formData.safety_features.split(",").map((s) => s.trim())
-            : [],
-          options: formData.options
-            ? formData.options.split(",").map((s) => s.trim())
-            : [],
-          makeId: parseInt(formData.makeId),
-          modelId: parseInt(formData.modelId),
-        }),
-      });
-
-      if (!vehicleRes.ok) {
-        const errorText = await vehicleRes.text();
-        console.error("Vehicle API error:", errorText);
-        throw new Error("Failed to create vehicle");
-      }
-
-      const vehicle = await vehicleRes.json();
-
-      const uploadedImages = [];
-      for (const file of images) {
-        const result = await uploadFile(file, "vehicle-image", vehicle.id);
-        if (result.success && result.fileUrl) {
-          uploadedImages.push({ url: result.fileUrl, key: result.fileKey });
-        }
-      }
-
-      if (uploadedImages.length > 0) {
-        await fetch("/api/vehicles/vehicle-images", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            vehicleId: vehicle.id,
-            images: uploadedImages,
-          }),
-        });
-      }
-
-      toast.success("Vehicle created successfully!");
-      setFormData({
-        vin_number: "",
-        model_year: "",
-        trim: "",
-        listed_price: "",
-        expected_price: "",
-        status: "OPEN",
-        odometer: "",
-        body_type: "",
-        doors: "",
-        drive_type: "",
-        transmission: "",
-        engine: "",
-        horse_power: "",
-        fuel_type: "",
-        fuel_capacity: "",
-        city_fuel: "",
-        hwy_fuel: "",
-        combined_fuel: "",
-        battery_capacity: "",
-        exterior_color: "",
-        interior_color: "",
-        front_legroom: "",
-        back_legroom: "",
-        cargo_volume: "",
-        safety_features: "",
-        options: "",
-        comment: "",
-        makeId: "",
-        modelId: "",
-      });
-      setImages([]);
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Failed to create vehicle");
-    } finally {
-      setIsSubmitting(false);
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+      e.target.value = "";
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    images.forEach((file) => formData.append("images", file));
+
+    await toast.promise(
+      (async () => {
+        const res = await fetch("/api/vehicles/create", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create vehicle");
+        return data;
+      })(),
+      {
+        loading: "🚗 Creating vehicle...",
+        success: "✅ Vehicle created successfully!",
+        error: (err) => `❌ ${err.message}`,
+      }
+    );
+  };
+  const removeFile = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold mb-6 text-center">Add Vehicle</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+    <div className="p-6 max-w-5xl mx-auto">
+      <SignedIn>
+        <div className="bg-red-300 w-fit p-2 rounded-full justify-self-end mb-6">
+          <UserButton showName={true} />
+        </div>
+      </SignedIn>
+
+      <h1 className="text-2xl font-bold mb-4">Create Vehicle</h1>
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white shadow p-6 rounded"
+      >
+        {/* Mandatory Fields */}
+        <label className="flex flex-col">
+          VIN Number *
           <input
+            type="text"
             name="vin_number"
-            value={formData.vin_number}
-            onChange={handleChange}
-            placeholder="VIN Number"
             required
-            className="border p-2 rounded-md"
+            className="border p-2"
           />
+        </label>
+
+        <label className="flex flex-col">
+          Model Year *
           <input
+            type="number"
             name="model_year"
-            type="number"
-            value={formData.model_year}
-            onChange={handleChange}
-            placeholder="Model Year"
             required
-            className="border p-2 rounded-md"
+            className="border p-2"
           />
+        </label>
+
+        <label className="flex flex-col">
+          Odometer *
           <input
-            name="trim"
-            value={formData.trim}
-            onChange={handleChange}
-            placeholder="Trim"
-            className="border p-2 rounded-md"
-          />
-          <input
-            name="listed_price"
             type="number"
-            value={formData.listed_price}
-            onChange={handleChange}
-            placeholder="Listed Price"
-            required
-            className="border p-2 rounded-md"
-          />
-          <input
-            name="expected_price"
-            type="number"
-            value={formData.expected_price}
-            onChange={handleChange}
-            placeholder="Expected Price"
-            className="border p-2 rounded-md"
-          />
-          <input
             name="odometer"
-            type="number"
-            value={formData.odometer || ""}
-            onChange={handleChange}
-            placeholder="Odometer"
-            className="border p-2 rounded-md"
+            required
+            className="border p-2"
           />
+        </label>
 
+        <label className="flex flex-col">
+          Listed Price *
           <input
-            name="body_type"
-            value={formData.body_type}
-            onChange={handleChange}
-            placeholder="Body Type"
-            className="border p-2 rounded-md"
-          />
-          <input
-            name="doors"
             type="number"
-            value={formData.doors}
-            onChange={handleChange}
-            placeholder="Doors"
-            className="border p-2 rounded-md"
+            step="0.01"
+            name="listed_price"
+            required
+            className="border p-2"
           />
-        </div>
+        </label>
 
-        <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col">
+          Make ID *
+          <input type="number" name="makeId" required className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Model ID *
+          <input type="number" name="modelId" required className="border p-2" />
+        </label>
+
+        {/* Optional Fields */}
+        <label className="flex flex-col">
+          Trim
+          <input type="text" name="trim" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Expected Price
           <input
-            name="drive_type"
-            value={formData.drive_type}
-            onChange={handleChange}
-            placeholder="Drive Type"
-            className="border p-2 rounded-md"
-          />
-          <input
-            name="transmission"
-            value={formData.transmission}
-            onChange={handleChange}
-            placeholder="Transmission"
-            className="border p-2 rounded-md"
-          />
-          <input
-            name="engine"
-            value={formData.engine}
-            onChange={handleChange}
-            placeholder="Engine"
-            className="border p-2 rounded-md"
-          />
-          <input
-            name="horse_power"
             type="number"
-            value={formData.horse_power}
-            onChange={handleChange}
-            placeholder="Horse Power"
-            className="border p-2 rounded-md"
+            step="0.01"
+            name="expected_price"
+            className="border p-2"
           />
-        </div>
+        </label>
 
-        <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col">
+          Status
           <input
-            name="fuel_type"
-            value={formData.fuel_type}
-            onChange={handleChange}
-            placeholder="Fuel Type"
-            className="border p-2 rounded-md"
+            type="text"
+            name="status"
+            placeholder="OPEN / SOLD"
+            className="border p-2"
           />
+        </label>
+
+        <label className="flex flex-col">
+          Body Type
+          <input type="text" name="body_type" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Doors
+          <input type="number" name="doors" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Drive Type
+          <input type="text" name="drive_type" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Transmission
+          <input type="text" name="transmission" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Engine
+          <input type="text" name="engine" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Horse Power
+          <input type="number" name="horse_power" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Fuel Type
+          <input type="text" name="fuel_type" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Fuel Capacity (liters)
           <input
+            type="number"
+            step="0.1"
             name="fuel_capacity"
-            type="number"
-            value={formData.fuel_capacity}
-            onChange={handleChange}
-            placeholder="Fuel Capacity (L)"
-            className="border p-2 rounded-md"
+            className="border p-2"
           />
+        </label>
+
+        <label className="flex flex-col">
+          City Fuel (L/100km)
           <input
+            type="number"
+            step="0.1"
             name="city_fuel"
-            type="number"
-            value={formData.city_fuel}
-            onChange={handleChange}
-            placeholder="City Fuel (L/100km)"
-            className="border p-2 rounded-md"
+            className="border p-2"
           />
+        </label>
+
+        <label className="flex flex-col">
+          Highway Fuel (L/100km)
           <input
-            name="hwy_fuel"
             type="number"
-            value={formData.hwy_fuel}
-            onChange={handleChange}
-            placeholder="Highway Fuel (L/100km)"
-            className="border p-2 rounded-md"
+            step="0.1"
+            name="hwy_fuel"
+            className="border p-2"
           />
+        </label>
+
+        <label className="flex flex-col">
+          Combined Fuel (L/100km)
+          <input
+            type="number"
+            step="0.1"
+            name="combined_fuel"
+            className="border p-2"
+          />
+        </label>
+
+        <label className="flex flex-col">
+          Battery Capacity
+          <input type="text" name="battery_capacity" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Exterior Color
+          <input type="text" name="exterior_color" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Interior Color
+          <input type="text" name="interior_color" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col">
+          Front Legroom (mm)
+          <input
+            type="number"
+            step="0.1"
+            name="front_legroom"
+            className="border p-2"
+          />
+        </label>
+
+        <label className="flex flex-col">
+          Back Legroom (mm)
+          <input
+            type="number"
+            step="0.1"
+            name="back_legroom"
+            className="border p-2"
+          />
+        </label>
+
+        <label className="flex flex-col">
+          Cargo Volume (liters)
+          <input
+            type="number"
+            step="0.1"
+            name="cargo_volume"
+            className="border p-2"
+          />
+        </label>
+
+        <label className="flex flex-col col-span-2">
+          Safety Features (comma separated)
+          <input type="text" name="safety_features" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col col-span-2">
+          Options (comma separated)
+          <input type="text" name="options" className="border p-2" />
+        </label>
+
+        <label className="flex flex-col col-span-2">
+          Comment
+          <textarea name="comment" rows={3} className="border p-2" />
+        </label>
+
+        {/* File Upload */}
+        <div className="flex flex-col gap-2">
+          {/* Hidden file input */}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            id="fileInput"
+            onChange={handleFileChange}
+          />
+
+          {/* Custom button to trigger file input */}
+          <button
+            type="button"
+            onClick={() => document.getElementById("fileInput")?.click()}
+            className="bg-gray-200 px-4 py-2 rounded"
+          >
+            Select Images
+          </button>
+
+          {/* Pills for selected files */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {images.map((file, index) => (
+              <div
+                key={index}
+                className="bg-gray-200 px-2 py-1 rounded flex items-center gap-1"
+              >
+                <span>{file.name}</span>
+                <button
+                  type="button"
+                  className="text-red-500 font-bold"
+                  onClick={() => removeFile(index)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <textarea
-          name="comment"
-          value={formData.comment}
-          onChange={handleChange}
-          placeholder="Comment"
-          className="border p-2 rounded-md w-full"
-        />
-
-        <input
-          name="makeId"
-          type="number"
-          value={formData.makeId}
-          onChange={handleChange}
-          placeholder="Make ID"
-          required
-          className="border p-2 rounded-md w-full"
-        />
-        <input
-          name="modelId"
-          type="number"
-          value={formData.modelId}
-          onChange={handleChange}
-          placeholder="Model ID"
-          required
-          className="border p-2 rounded-md w-full"
-        />
-
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileChange}
-          className="border p-2 rounded-md w-full"
-        />
-
-        {uploadState.progress && (
-          <p className="text-blue-500">
-            Uploading images: {uploadState.progress.percentage}%
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors w-full"
-        >
-          {isSubmitting ? "Submitting..." : "Add Vehicle"}
-        </button>
+        <div className="col-span-2">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+          >
+            Create Vehicle
+          </button>
+        </div>
       </form>
     </div>
   );

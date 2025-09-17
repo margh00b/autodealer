@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.888.0",
-    "@aws-sdk/lib-storage": "^3.888.0",
+    "@aws-sdk/lib-storage": "^3.890.0",
     "@aws-sdk/s3-request-presigner": "^3.888.0",
     "@clerk/nextjs": "^6.32.0",
     "@prisma/client": "^6.15.0",
@@ -25,7 +25,8 @@
     "react-dom": "19.1.0",
     "react-redux": "^9.2.0",
     "sonner": "^2.0.7",
-    "toast": "^0.5.4"
+    "toast": "^0.5.4",
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
