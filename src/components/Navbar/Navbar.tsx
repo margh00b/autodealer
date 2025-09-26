@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-export default function Navbar() {
+export default function Navbar({ css }: { css?: string }) {
   return (
-    <nav className="absolute top-0 w-full bg-transparent z-999">
+    <nav className={`absolute top-0 w-full bg-transparent z-999 ${css} `}>
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-center items-center h-16">
           <div className="flex space-x-8 text-white">
@@ -13,7 +13,7 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/inventory"
+              href="/vehicles"
               className="relative px-4 py-2 transition-all duration-300 ease-in-out hover:text-red"
             >
               Inventory
@@ -32,7 +32,6 @@ export default function Navbar() {
             </Link>
           </div>
         </div>
-      
       </div>
     </nav>
   );

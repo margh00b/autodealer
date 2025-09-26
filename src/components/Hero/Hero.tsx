@@ -6,7 +6,6 @@ export default function Hero() {
       <header
         className={`relative w-full h-[200px] ${styles.bgGrainy} rounded-b-[60%_40%] z-[-1]`}
       ></header>
-      <SearchBar />
     </div>
   );
 }

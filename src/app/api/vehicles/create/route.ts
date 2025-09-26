@@ -7,16 +7,21 @@ import prisma from "../../../../../prisma/client";
 import { Upload } from "@aws-sdk/lib-storage";
 
 const VehicleSchema = z.object({
+  // Identifiers
   vin_number: z.string(),
   model_year: z.coerce.number().int(),
   trim: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
 
+  // Pricing
   listed_price: z.coerce.number(),
-  expected_price: z.coerce.number().optional().nullable(),
+  discounted_price: z.coerce.number().optional().nullable(),
 
-  status: z.string().default("OPEN"),
-  odometer: z.coerce.number().int().optional().nullable(),
+  // Status
+  status: z.string().optional().nullable(), // OPEN, SOLD, etc.
 
+  // Basic details
+  odometer: z.coerce.number().int(),
   body_type: z.string().optional().nullable(),
   doors: z.coerce.number().int().optional().nullable(),
   drive_type: z.string().optional().nullable(),
@@ -24,6 +29,7 @@ const VehicleSchema = z.object({
   engine: z.string().optional().nullable(),
   horse_power: z.coerce.number().int().optional().nullable(),
 
+  // Fuel & battery
   fuel_type: z.string().optional().nullable(),
   fuel_capacity: z.coerce.number().optional().nullable(),
   city_fuel: z.coerce.number().optional().nullable(),
@@ -31,25 +37,31 @@ const VehicleSchema = z.object({
   combined_fuel: z.coerce.number().optional().nullable(),
   battery_capacity: z.string().optional().nullable(),
 
+  // Colors
   exterior_color: z.string().optional().nullable(),
   interior_color: z.string().optional().nullable(),
 
+  // Measurements
   front_legroom: z.coerce.number().optional().nullable(),
   back_legroom: z.coerce.number().optional().nullable(),
   cargo_volume: z.coerce.number().optional().nullable(),
 
-  safety_features: z
-    .string()
-    .transform((val) => val.split(",").map((s) => s.trim()))
-    .optional()
-    .default([]),
-  options: z
-    .string()
-    .transform((val) => val.split(",").map((s) => s.trim()))
+  // Features (arrays in Prisma, not CSV strings)
+  features: z
+    .union([z.string(), z.array(z.string())])
+    .transform((val) =>
+      Array.isArray(val) ? val : val.split(",").map((s) => s.trim())
+    )
     .optional()
     .default([]),
 
+  
+
+  // Metadata
+  carfax: z.string().optional().nullable(),
   comment: z.string().optional().nullable(),
+
+  // Relations
   makeId: z.coerce.number().int(),
   modelId: z.coerce.number().int(),
 });

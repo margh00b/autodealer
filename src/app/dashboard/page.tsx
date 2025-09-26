@@ -1,22 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { SignedIn, UserButton } from "@clerk/nextjs";
+interface Make {
+  id: number;
+  name: string;
+}
 
+interface Model {
+  id: number;
+  name: string;
+}
 export default function VehicleDashboard() {
-  
-
-
   const [images, setImages] = useState<File[]>([]);
+  const [makes, setMakes] = useState<Make[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [selectedMake, setSelectedMake] = useState<number | null>(null);
+
+  const vehicleStatuses = [
+    "AVAILABLE",
+    "RESERVED",
+    "SOLD",
+    "PENDING",
+    "UNAVAILABLE",
+  ];
+  const bodyTypes = [
+    "CONVERTIBLE",
+    "COUPE",
+    "HATCHBACK",
+    "MINIVAN",
+    "SEDAN",
+    "SUV",
+    "TRUCK",
+    "WAGON",
+  ];
+  const driveTypes = ["FWD", "RWD", "AWD", "FOURWD"];
+  const transmissions = ["AUTOMATIC", "MANUAL"];
+  const fuelTypes = ["PETROL", "DIESEL", "ELECTRIC"];
+
+  useEffect(() => {
+    fetch("/api/makes")
+      .then((res) => res.json())
+      .then(setMakes)
+      .catch(console.error);
+  }, []);
+  useEffect(() => {
+    if (!selectedMake) {
+      setModels([]);
+      return;
+    }
+
+    fetch(`/api/models?makeId=${selectedMake}`)
+      .then((res) => res.json())
+      .then(setModels);
+  }, [selectedMake]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -28,7 +66,9 @@ export default function VehicleDashboard() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget; // save the form element
+
+    const formData = new FormData(form);
     images.forEach((file) => formData.append("images", file));
 
     await toast.promise(
@@ -40,6 +80,12 @@ export default function VehicleDashboard() {
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to create vehicle");
+
+        form.reset();
+        setImages([]);
+        setSelectedMake(null);
+        setModels([]);
+
         return data;
       })(),
       {
@@ -49,23 +95,33 @@ export default function VehicleDashboard() {
       }
     );
   };
+
   const removeFile = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <SignedIn>
-        <div className="bg-red-300 w-fit p-2 rounded-full justify-self-end mb-6">
+        <div className="bg-red-300 w-fit p-2 rounded-full justify-self-end mb-6 shadow">
           <UserButton showName={true} />
         </div>
       </SignedIn>
 
-      <h1 className="text-2xl font-bold mb-4">Create Vehicle</h1>
+      <h1 className="text-3xl font-extrabold mb-6 text-gray-800">
+        Create Vehicle
+      </h1>
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white shadow p-6 rounded"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white shadow-lg p-8 rounded-2xl border border-gray-100"
       >
         {/* Mandatory Fields */}
+        <div className="md:col-span-2 mb-2">
+          <h2 className="text-xl font-semibold text-blue-700 mb-2">
+            Basic Information
+          </h2>
+        </div>
+
         <label className="flex flex-col">
           VIN Number *
           <input
@@ -108,44 +164,84 @@ export default function VehicleDashboard() {
         </label>
 
         <label className="flex flex-col">
-          Make ID *
-          <input type="number" name="makeId" required className="border p-2" />
+          Discounted Price *
+          <input
+            type="number"
+            step="0.01"
+            name="discounted_price"
+            className="border p-2"
+          />
         </label>
 
+        {/* Make Dropdown */}
         <label className="flex flex-col">
-          Model ID *
-          <input type="number" name="modelId" required className="border p-2" />
+          Make *
+          <select
+            name="makeId"
+            onChange={(e) => setSelectedMake(Number(e.target.value))}
+            className="border p-2"
+            required
+          >
+            <option value="">-- Select Make --</option>
+            {makes.map((make) => (
+              <option key={make.id} value={make.id}>
+                {make.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* Model Dropdown */}
+        <label className="flex flex-col">
+          Model *
+          <select name="modelId" className="border p-2" required>
+            <option value="">-- Select Model --</option>
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))}
+          </select>
         </label>
 
         {/* Optional Fields */}
+        <div className="md:col-span-2 mt-4 mb-2">
+          <h2 className="text-xl font-semibold text-blue-700 mb-2">Details</h2>
+        </div>
+
         <label className="flex flex-col">
           Trim
           <input type="text" name="trim" className="border p-2" />
         </label>
 
-        <label className="flex flex-col">
-          Expected Price
-          <input
-            type="number"
-            step="0.01"
-            name="expected_price"
-            className="border p-2"
-          />
+        <label className="flex flex-col col-span-2">
+          Description
+          <textarea name="description" rows={3} className="border p-2" />
         </label>
 
+        {/* ENUM DROPDOWNS */}
         <label className="flex flex-col">
           Status
-          <input
-            type="text"
-            name="status"
-            placeholder="OPEN / SOLD"
-            className="border p-2"
-          />
+          <select name="status" className="border p-2">
+            <option value="">-- Select --</option>
+            {vehicleStatuses.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col">
           Body Type
-          <input type="text" name="body_type" className="border p-2" />
+          <select name="body_type" className="border p-2">
+            <option value="">-- Select --</option>
+            {bodyTypes.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col">
@@ -155,12 +251,26 @@ export default function VehicleDashboard() {
 
         <label className="flex flex-col">
           Drive Type
-          <input type="text" name="drive_type" className="border p-2" />
+          <select name="drive_type" className="border p-2">
+            <option value="">-- Select --</option>
+            {driveTypes.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col">
           Transmission
-          <input type="text" name="transmission" className="border p-2" />
+          <select name="transmission" className="border p-2">
+            <option value="">-- Select --</option>
+            {transmissions.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col">
@@ -175,8 +285,22 @@ export default function VehicleDashboard() {
 
         <label className="flex flex-col">
           Fuel Type
-          <input type="text" name="fuel_type" className="border p-2" />
+          <select name="fuel_type" className="border p-2">
+            <option value="">-- Select --</option>
+            {fuelTypes.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
         </label>
+
+        {/* Remaining fields */}
+        <div className="md:col-span-2 mt-4 mb-2">
+          <h2 className="text-xl font-semibold text-blue-700 mb-2">
+            Specifications
+          </h2>
+        </div>
 
         <label className="flex flex-col">
           Fuel Capacity (liters)
@@ -264,13 +388,13 @@ export default function VehicleDashboard() {
         </label>
 
         <label className="flex flex-col col-span-2">
-          Safety Features (comma separated)
-          <input type="text" name="safety_features" className="border p-2" />
+          Features (comma separated)
+          <input type="text" name="features" className="border p-2" />
         </label>
 
         <label className="flex flex-col col-span-2">
-          Options (comma separated)
-          <input type="text" name="options" className="border p-2" />
+          Carfax
+          <input type="text" name="carfax" className="border p-2" />
         </label>
 
         <label className="flex flex-col col-span-2">
@@ -279,8 +403,8 @@ export default function VehicleDashboard() {
         </label>
 
         {/* File Upload */}
-        <div className="flex flex-col gap-2">
-          {/* Hidden file input */}
+        <div className="flex flex-col gap-2 col-span-2 mt-4">
+          <label className="font-semibold text-gray-700 mb-1">Images</label>
           <input
             type="file"
             accept="image/*"
@@ -289,28 +413,26 @@ export default function VehicleDashboard() {
             id="fileInput"
             onChange={handleFileChange}
           />
-
-          {/* Custom button to trigger file input */}
           <button
             type="button"
             onClick={() => document.getElementById("fileInput")?.click()}
-            className="bg-gray-200 px-4 py-2 rounded"
+            className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-150 shadow-sm font-medium"
           >
             Select Images
           </button>
 
-          {/* Pills for selected files */}
           <div className="flex flex-wrap gap-2 mt-2">
             {images.map((file, index) => (
               <div
                 key={index}
-                className="bg-gray-200 px-2 py-1 rounded flex items-center gap-1"
+                className="bg-gray-100 px-3 py-1 rounded-lg flex items-center gap-2 border border-gray-200 shadow-sm"
               >
-                <span>{file.name}</span>
+                <span className="text-sm">{file.name}</span>
                 <button
                   type="button"
-                  className="text-red-500 font-bold"
+                  className="text-red-500 font-bold hover:text-red-700 transition"
                   onClick={() => removeFile(index)}
+                  aria-label="Remove image"
                 >
                   ×
                 </button>
@@ -319,10 +441,10 @@ export default function VehicleDashboard() {
           </div>
         </div>
 
-        <div className="col-span-2">
+        <div className="col-span-2 mt-6">
           <button
             type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+            className="bg-blue-600 hover:bg-blue-700 focus:bg-blue-800 text-white px-6 py-3 rounded-xl w-full font-semibold shadow transition-colors duration-150"
           >
             Create Vehicle
           </button>
