@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../../prisma/client";
 import { use } from "react";
-type Context = Promise<{ id: string }>;
 
-export async function PATCH(req: NextRequest, { params }: { params: Context }) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id }: { id: string } = use(params);
+    const { id } = await params;
     const Id2 = Number(id);
     const body = await req.json();
     const { id: _id, images, ...updateData } = body;
