@@ -1,159 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CustomDropdown from "./CustomDropdown";
+import { Filters } from "../VehicleFilterbar/VehicleFilterbar";
 
-export default function SearchBar() {
-  const [searchData, setSearchData] = useState({
+interface SearchData {
+  make: string;
+  model: string;
+  year: string;
+  type: string;
+}
+
+interface Make {
+  id: number;
+  name: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+}
+
+interface SearchBarProps {
+  filters: Filters;
+  setFilters: (filters: Filters) => void;
+}
+
+export default function SearchBar({ filters, setFilters }: SearchBarProps) {
+  const [searchData, setSearchData] = useState<SearchData>({
     make: "Any Make",
     model: "Any Model",
     year: "Any Year",
     type: "Any Type",
   });
 
-  const makeModelMap: Record<string, string[]> = {
-    "Any Make": ["Any Model"],
-    Toyota: [
-      "Any Model",
-      "Camry",
-      "Corolla",
-      "RAV4",
-      "Highlander",
-      "Tacoma",
-      "Tundra",
-      "Prius",
-      "Supra",
-    ],
-    Honda: [
-      "Any Model",
-      "Civic",
-      "Accord",
-      "CR-V",
-      "Pilot",
-      "HR-V",
-      "Fit",
-      "Odyssey",
-    ],
-    Ford: [
-      "Any Model",
-      "F-150",
-      "Mustang",
-      "Explorer",
-      "Escape",
-      "Edge",
-      "Ranger",
-      "Bronco",
-      "Fusion",
-    ],
-    Chevrolet: [
-      "Any Model",
-      "Silverado",
-      "Malibu",
-      "Equinox",
-      "Tahoe",
-      "Camaro",
-      "Traverse",
-      "Colorado",
-    ],
-    BMW: [
-      "Any Model",
-      "3 Series",
-      "5 Series",
-      "X1",
-      "X3",
-      "X5",
-      "X7",
-      "7 Series",
-      "M3",
-    ],
-    "Mercedes-Benz": [
-      "Any Model",
-      "C-Class",
-      "E-Class",
-      "S-Class",
-      "GLC",
-      "GLE",
-      "A-Class",
-      "G-Class",
-    ],
-    Audi: [
-      "Any Model",
-      "A3",
-      "A4",
-      "A6",
-      "A8",
-      "Q3",
-      "Q5",
-      "Q7",
-      "Q8",
-      "TT",
-      "e-tron",
-    ],
-    Nissan: [
-      "Any Model",
-      "Altima",
-      "Sentra",
-      "Maxima",
-      "Rogue",
-      "Murano",
-      "Pathfinder",
-      "Titan",
-      "350Z",
-    ],
-    Hyundai: [
-      "Any Model",
-      "Elantra",
-      "Sonata",
-      "Tucson",
-      "Santa Fe",
-      "Kona",
-      "Palisae",
-      "Venue",
-    ],
-    Kia: [
-      "Any Model",
-      "Sorento",
-      "Sportage",
-      "Optima",
-      "Telluride",
-      "Seltos",
-      "Stinger",
-      "Soul",
-    ],
-    Mazda: [
-      "Any Model",
-      "CX-5",
-      "Mazda3",
-      "Mazda6",
-      "CX-30",
-      "CX-50",
-      "MX-5 Miata",
-      "CX-9",
-    ],
-    Subaru: [
-      "Any Model",
-      "Outback",
-      "Forester",
-      "Impreza",
-      "Crosstrek",
-      "Legacy",
-      "WRX",
-      "BRZ",
-    ],
-    Volkswagen: [
-      "Any Model",
-      "Jetta",
-      "Passat",
-      "Tiguan",
-      "Atlas",
-      "Golf",
-      "Arteon",
-      "ID.4",
-    ],
-    Lexus: ["Any Model", "ES", "RX", "NX", "IS", "UX", "GX", "LX"],
-  };
-
-  const filteredModels = makeModelMap[searchData.make] || ["Any Model"];
+  const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
+  const [selectedMakeId, setSelectedMakeId] = useState<number | null>(null);
+  const [models, setModels] = useState<Model[]>([]);
 
   const years = [
     "Any Year",
@@ -190,44 +73,76 @@ export default function SearchBar() {
     "Hybrid",
   ];
 
-  const handleInputChange = (field: string, value: string) => {
-    setSearchData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  useEffect(() => {
+    fetch("/api/makes")
+      .then((res) => res.json())
+      .then(setMakes)
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedMakeId) {
+      setModels([]);
+      setSearchData((prev) => ({ ...prev, model: "Any Model" }));
+      return;
+    }
+
+    fetch(`/api/models?makeId=${selectedMakeId}`)
+      .then((res) => res.json())
+      .then((data) => setModels([{ id: 0, name: "Any Model" }, ...data]))
+      .catch(console.error);
+  }, [selectedMakeId]);
+
+  const handleInputChange = (field: keyof SearchData, value: string) => {
+    setSearchData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearch = () => {
-    console.log("Searching for:", searchData);
-    // TODO: Connect to your backend search API
+    setFilters({
+      make: searchData.make === "Any Make" ? "" : searchData.make,
+      model: searchData.model === "Any Model" ? "" : searchData.model,
+      year: searchData.year === "Any Year" ? "" : searchData.year,
+      bodyType:
+        searchData.type === "Any Type" ? "" : searchData.type.toUpperCase(),
+      price: [0, 100000],
+      mileage: 0,
+      engine: "",
+      driveType: "",
+      exteriorColor: "",
+      interiorColor: "",
+    });
+    const inventoryElement = document.getElementById("inventory");
+    if (inventoryElement) {
+      inventoryElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 mt-[-70px] z-999">
+    <div className="w-full max-w-7xl mx-auto px-4 mt-[-70px] z-50">
       <div className="bg-white shadow-2xl rounded-full p-6 md:p-4 flex flex-col md:flex-row gap-4 items-center">
         {/* Make */}
         <div className="flex-1 w-full md:w-auto">
           <CustomDropdown
-            options={Object.keys(makeModelMap)}
+            options={makes.map((m) => m.name)}
             value={searchData.make}
-            onChange={(value) =>
+            onChange={(value) => {
+              const make = makes.find((m) => m.name === value);
+              setSelectedMakeId(make?.id ?? null);
               setSearchData((prev) => ({
                 ...prev,
                 make: value,
                 model: "Any Model",
-              }))
-            }
-            placeholder="Any Make"
+              }));
+            }}
           />
         </div>
 
         {/* Model */}
         <div className="flex-1 w-full md:w-auto">
           <CustomDropdown
-            options={filteredModels}
+            options={models.map((m) => m.name)}
             value={searchData.model}
             onChange={(value) => handleInputChange("model", value)}
-            placeholder="Any Model"
           />
         </div>
 
@@ -237,7 +152,6 @@ export default function SearchBar() {
             options={years}
             value={searchData.year}
             onChange={(value) => handleInputChange("year", value)}
-            placeholder="Any Year"
           />
         </div>
 
@@ -247,14 +161,13 @@ export default function SearchBar() {
             options={types}
             value={searchData.type}
             onChange={(value) => handleInputChange("type", value)}
-            placeholder="Any Type"
           />
         </div>
 
         {/* Search Button */}
         <button
           onClick={handleSearch}
-          className="w-full md:w-auto bg-red text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:bg-maroon"
+          className="w-full md:w-auto bg-red-600 text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-700"
         >
           Search
         </button>

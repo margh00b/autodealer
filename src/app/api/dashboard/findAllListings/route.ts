@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../prisma/client";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { r2Client } from "@/lib/r2-client";
 
 export async function GET(req: NextRequest) {
   try {
     const vehicles = await prisma.vehicle.findMany({
-      select: {
-        id: true,
-        model_year: true,
-        trim: true,
-        listed_price: true,
-        discounted_price: true,
-        odometer: true,
-        body_type: true,
-        transmission: true,
-        engine: true,
-        doors: true,
-        drive_type: true,
-        features: true,
+      include: {
         make: {
           select: { name: true },
         },
@@ -24,7 +15,7 @@ export async function GET(req: NextRequest) {
           select: { name: true },
         },
         images: {
-          select: { key: true, id: true, url: true },
+          select: { key: true, id: true },
         },
       },
       orderBy: {

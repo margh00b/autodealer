@@ -1,5 +1,6 @@
 import { Vehicle } from "@/types/vehicle";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type VehicleCardProps = {
   vehicle: Vehicle;
@@ -9,18 +10,60 @@ export default function VehicleCard({
   vehicle,
   onCheckAvailability,
 }: VehicleCardProps) {
+  const [images, setImages] = useState<{ url: string }[]>([]);
+  const [loadingImages, setLoadingImages] = useState(true);
+  useEffect(() => {
+    async function fetchSignedImages() {
+      setLoadingImages(true);
+
+      try {
+        const firstImage = vehicle.images?.[0];
+        const res = await fetch("/api/images/getSignedImages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ images: firstImage ? [firstImage] : [] }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Failed to fetch signed image");
+        }
+
+        const signedImages = await res.json();
+        console.log("Signed images returned from API:", signedImages);
+        setImages(
+          signedImages.length ? signedImages : [{ url: "/car-placeholder.png" }]
+        );
+        setImages(
+          signedImages.length ? signedImages : [{ url: "/car-placeholder.png" }]
+        );
+      } catch (err: any) {
+        console.error("Could not fetch signed images:", err);
+        setImages([{ url: "/car-placeholder.png" }]);
+      } finally {
+        setLoadingImages(false);
+      }
+    }
+
+    fetchSignedImages();
+  }, [vehicle.id]);
+
   return (
     <div className="max-w-100 rounded-lg shadow-xl bg-white border-thinGrey border-1 flex flex-col overflow-hidden  hover:shadow-2xl hover:border-maroon/20 duration-200 ease-in">
       <div className="divide-y divide-gray-200">
         <section className="divide-y divide-gray-200">
           <Link href={`/vehicles/${vehicle.id}`} className="block">
             {/* Image */}
-            <div className="">
-              <img
-                src={"/honda.jpg"}
-                alt={`${vehicle.make.name} ${vehicle.model.name}`}
-                className="h-full w-full object-cover rounded"
-              />
+            <div className="h-fit w-full bg-gray-200 overflow-hidden rounded">
+              {loadingImages ? (
+                <div className="animate-pulse h-full w-full bg-gray-300" />
+              ) : (
+                <img
+                  src={images[0]?.url}
+                  alt={`${vehicle.make.name} ${vehicle.model.name}`}
+                  className="h-full w-full object-cover rounded"
+                />
+              )}
             </div>
 
             {/* Title + Price Row */}
@@ -47,7 +90,7 @@ export default function VehicleCard({
             </div>
 
             {/* Bottom Section: Details */}
-            <div className="p-3 space-y-1 text-sm text-gray-600">
+            <div className="p-3 space-y-1 text-sm text-gray-600 border-y-1 border-gray-200">
               <p>Odometer: {vehicle.odometer.toLocaleString()} km</p>
               {vehicle.engine && <p>Engine: {vehicle.engine}</p>}
               {vehicle.transmission && (

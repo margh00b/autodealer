@@ -10,7 +10,7 @@ import useEmblaCarousel from "embla-carousel-react";
 
 type Slide = {
   id: string;
-  signedUrl: string;
+  url: string;
   title?: string;
 };
 
@@ -43,7 +43,7 @@ export default function VehicleCarousel({
             >
               <img
                 className="w-full max-h-[400px] object-contain rounded"
-                src={item.signedUrl}
+                src={item.url}
                 alt={item.title || "Vehicle Image"}
               />
             </div>

@@ -35,6 +35,11 @@ export default function VehicleInventory({
       interiorColor: "",
     }
   );
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters(initialFilters);
+    }
+  }, [initialFilters]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   // Fetch vehicles when component mounts
@@ -87,8 +92,22 @@ export default function VehicleInventory({
   const vehiclesToShow = numberOfListings
     ? filteredVehicles.slice(0, numberOfListings)
     : filteredVehicles;
-
-  if (loading) return <p>Loading vehicles...</p>;
+  //TODO: Add proper skeleton loading
+  if (loading)
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {Array.from({ length: numberOfListings ?? 6 }).map((_, idx) => (
+          <div
+            key={idx}
+            className="border rounded-lg p-4 animate-pulse flex flex-col gap-2 h-64"
+          >
+            <div className="bg-gray-300 h-32 w-full rounded"></div>
+            <div className="bg-gray-300 h-4 w-3/4 rounded"></div>
+            <div className="bg-gray-300 h-4 w-1/2 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
 
   return (
     <div className="flex flex-col lg:flex-row gap-10">

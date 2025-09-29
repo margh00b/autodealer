@@ -73,7 +73,7 @@ export default function VehicleDashboard() {
 
     await toast.promise(
       (async () => {
-        const res = await fetch("/api/vehicles/create", {
+        const res = await fetch("/api/dashboard/create", {
           method: "POST",
           body: formData,
         });
