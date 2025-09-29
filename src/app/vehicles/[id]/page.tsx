@@ -4,6 +4,7 @@ import Hero from "@/components/Hero/Hero";
 import Navbar from "@/components/Navbar/Navbar";
 import VehiclePricing from "@/components/VehicleListing/VehiclePricing/VehiclePricing";
 import VehicleSummary from "@/components/VehicleListing/VehicleSummary/VehicleSummary";
+import { Vehicle } from "@/types/vehicle";
 import { notFound } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
@@ -14,7 +15,7 @@ export default function VehicleDetail({
 }) {
   const unwrappedParams = use(params);
   const { id } = unwrappedParams;
-  const [vehicle, setVehicle] = useState<any>(null);
+  const [vehicle, setVehicle] = useState<Partial<Vehicle> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

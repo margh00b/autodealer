@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { Vehicle } from "@/types/vehicle";
@@ -122,11 +124,6 @@ export default function VehicleEditModal({
     setImages((prev) => prev.filter((img) => img.id !== imageId));
   }
 
-  // --- Handle new files ---
-  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setNewFiles(Array.from(e.target.files));
-  };
   // --- Upload new images ---
   const handleUploadImages = async () => {
     if (newFiles.length === 0) return;

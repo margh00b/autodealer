@@ -5,8 +5,8 @@ export default function VehiclePricing({
   pricing,
   vehicle,
 }: {
-  pricing: any;
-  vehicle: any;
+  pricing: { listedPrice: number; discountedPrice?: number };
+  vehicle: { id: string; listed_price: number; discounted_price?: number };
 }) {
   const { listedPrice, discountedPrice } = pricing;
 
@@ -29,7 +29,7 @@ export default function VehiclePricing({
       {/* Availability Form */}
       <div className="mt-12">
         <CheckVehicleAvailability
-          vehicleId={vehicle.id}
+          vehicleId={Number(vehicle.id)}
           vehicleMake=""
           vehicleModel=""
         />

@@ -32,7 +32,10 @@ export async function testR2Connection(): Promise<boolean> {
   }
 }
 
-export function handleR2Error(error: any): string {
+export function handleR2Error(error: {
+  name: string;
+  message: string;
+}): string {
   if (error.name === "NoSuchBucket") return "Bucket does not exist.";
   if (error.name === "InvalidAccessKeyId") return "Invalid access key.";
   if (error.name === "SignatureDoesNotMatch") return "Authentication failed.";

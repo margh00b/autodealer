@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const files = formData.getAll("images") as File[];
     const vehicleId = Number(formData.get("vehicleId"));
 
-    const uploaded: any[] = [];
+    const uploaded = [];
     for (const file of files) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);

@@ -1,8 +1,9 @@
 import VehicleCarousel from "@/components/VehicleCarousel/VehicleCarousel";
+import { Vehicle } from "@/types/vehicle";
 import type { EmblaOptionsType } from "embla-carousel";
 import { useEffect, useState } from "react";
 
-export default function VehicleSummary({ vehicle }: { vehicle: any }) {
+export default function VehicleSummary({ vehicle }: { vehicle: Vehicle }) {
   const OPTIONS: EmblaOptionsType = { align: "start" };
 
   // helper component for sections
@@ -21,7 +22,7 @@ export default function VehicleSummary({ vehicle }: { vehicle: any }) {
         });
         const signedImages = await res.json();
         setImages(signedImages);
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
         alert("Could not fetch signed images");
       }
@@ -113,7 +114,7 @@ export default function VehicleSummary({ vehicle }: { vehicle: any }) {
       <SectionCard>
         <h2 className="text-xl font-semibold mb-2">Features</h2>
         <div className="flex flex-wrap gap-2">
-          {vehicle.features.map((f: string, idx: number) => (
+          {(vehicle.features ?? []).map((f: string, idx: number) => (
             <span
               key={idx}
               className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium"

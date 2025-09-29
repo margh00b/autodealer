@@ -1,11 +1,7 @@
 "use client";
 
 import { EmblaOptionsType } from "embla-carousel";
-import {
-  PrevButton,
-  NextButton,
-  usePrevNextButtons,
-} from "./EmblaCarouselArrowButtons";
+import { usePrevNextButtons } from "./EmblaCarouselArrowButtons";
 import useEmblaCarousel from "embla-carousel-react";
 
 type Slide = {

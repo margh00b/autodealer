@@ -16,8 +16,11 @@ export async function PATCH(
     });
 
     return NextResponse.json(updated);
-  } catch (error: any) {
+  } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to Update Vehicle!" },
+      { status: 500 }
+    );
   }
 }

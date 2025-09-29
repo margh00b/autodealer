@@ -1,455 +1,238 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import VehicleEditModal from "@/components/VehicleEditModal/VehicleEditModal";
+import { Vehicle } from "@/types/vehicle";
+import Link from "next/link";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { SignedIn, UserButton } from "@clerk/nextjs";
-interface Make {
-  id: number;
-  name: string;
+
+enum VehicleStatus {
+  AVAILABLE = "AVAILABLE",
+  RESERVED = "RESERVED",
+  SOLD = "SOLD",
+  PENDING = "PENDING",
+  UNAVAILABLE = "UNAVAILABLE",
 }
 
-interface Model {
-  id: number;
-  name: string;
-}
-export default function VehicleDashboard() {
-  const [images, setImages] = useState<File[]>([]);
-  const [makes, setMakes] = useState<Make[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [selectedMake, setSelectedMake] = useState<number | null>(null);
+const statusColors: Record<string, string> = {
+  ALL: "bg-gray-200 text-gray-800",
+  AVAILABLE: "bg-green-100 text-green-700",
+  RESERVED: "bg-yellow-100 text-yellow-700",
+  SOLD: "bg-red-100 text-red-700",
+  PENDING: "bg-blue-100 text-blue-700",
+  UNAVAILABLE: "bg-gray-100 text-gray-700",
+};
 
-  const vehicleStatuses = [
-    "AVAILABLE",
-    "RESERVED",
-    "SOLD",
-    "PENDING",
-    "UNAVAILABLE",
-  ];
-  const bodyTypes = [
-    "CONVERTIBLE",
-    "COUPE",
-    "HATCHBACK",
-    "MINIVAN",
-    "SEDAN",
-    "SUV",
-    "TRUCK",
-    "WAGON",
-  ];
-  const driveTypes = ["FWD", "RWD", "AWD", "FOURWD"];
-  const transmissions = ["AUTOMATIC", "MANUAL"];
-  const fuelTypes = ["PETROL", "DIESEL", "ELECTRIC"];
+export default function DashboardListings() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [activeStatus, setActiveStatus] = useState<"ALL" | VehicleStatus>(
+    "ALL"
+  );
 
-  useEffect(() => {
-    fetch("/api/makes")
-      .then((res) => res.json())
-      .then(setMakes)
-      .catch(console.error);
-  }, []);
-  useEffect(() => {
-    if (!selectedMake) {
-      setModels([]);
-      return;
-    }
-
-    fetch(`/api/models?makeId=${selectedMake}`)
-      .then((res) => res.json())
-      .then(setModels);
-  }, [selectedMake]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(Array.from(e.target.files));
-      e.target.value = "";
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const form = e.currentTarget; // save the form element
-
-    const formData = new FormData(form);
-    images.forEach((file) => formData.append("images", file));
-
-    await toast.promise(
-      (async () => {
-        const res = await fetch("/api/dashboard/create", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to create vehicle");
-
-        form.reset();
-        setImages([]);
-        setSelectedMake(null);
-        setModels([]);
-
-        return data;
-      })(),
-      {
-        loading: "🚗 Creating vehicle...",
-        success: "✅ Vehicle created successfully!",
-        error: (err) => `❌ ${err.message}`,
+  const fetchVehicles = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/findAllListings");
+      if (!res.ok) throw new Error("Failed to fetch vehicles");
+      const data = await res.json();
+      setVehicles(data);
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("An unknown error occurred");
       }
-    );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
+
+  const handleSave = async (id: number, editedData: Partial<Vehicle>) => {
+    try {
+      const {
+        id: _id,
+        make,
+        model,
+        images,
+        availabilityForms,
+        ...updateData
+      } = editedData;
+
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(
+          ([_, value]) => value !== undefined && value !== null
+        )
+      );
+
+      const res = await fetch(`/api/dashboard/updateVehicle/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(filteredUpdateData),
+      });
+
+      if (!res.ok) throw new Error("Failed to update vehicle");
+      const updated = await res.json();
+      setVehicles((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      setEditingVehicle(null);
+      toast.success("Vehicle updated successfully! 🎉");
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
+      throw err;
+    }
   };
 
-  const removeFile = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
+  const formatPrice = (value?: number) =>
+    value ? `$${value.toLocaleString()}` : "-";
+  const formatOdometer = (value?: number) =>
+    value ? `${value.toLocaleString()} km` : "-";
+  const formatFuel = (value?: number) =>
+    value ? `${value.toFixed(1)} L/100km` : "-";
+
+  // Group vehicles by status
+  const vehiclesByStatus = Object.values(VehicleStatus).reduce(
+    (acc, status) => {
+      acc[status] = vehicles.filter((v) => v.status === status);
+      return acc;
+    },
+    {} as Record<VehicleStatus, Vehicle[]>
+  );
+
+  const filteredVehicles =
+    activeStatus === "ALL" ? vehicles : vehiclesByStatus[activeStatus] || [];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <SignedIn>
-        <div className="bg-red-300 w-fit p-2 rounded-full justify-self-end mb-6 shadow">
-          <UserButton showName={true} />
-        </div>
-      </SignedIn>
+    <div className="p-6 max-w-full mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-extrabold ">Dealer Dashboard</h1>
+        <Link
+          href="/dashboard/create"
+          className="inline-flex items-center gap-2 bg-maroon hover:bg-red text-white px-5 py-2.5 rounded-lg font-semibold shadow transition"
+        >
+          <span className="text-lg">+</span> Create Vehicle
+        </Link>
+      </div>
+      {/* Status Pills */}
+      <div className="flex flex-wrap gap-3 mb-8">
+        {["ALL", ...Object.values(VehicleStatus)].map((status) => {
+          const count =
+            status === "ALL"
+              ? vehicles.length
+              : vehiclesByStatus[status as VehicleStatus]?.length || 0;
 
-      <h1 className="text-3xl font-extrabold mb-6 text-gray-800">
-        Create Vehicle
-      </h1>
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white shadow-lg p-8 rounded-2xl border border-gray-100"
-      >
-        {/* Mandatory Fields */}
-        <div className="md:col-span-2 mb-2">
-          <h2 className="text-xl font-semibold text-blue-700 mb-2">
-            Basic Information
-          </h2>
-        </div>
+          return (
+            <button
+              key={status}
+              onClick={() => setActiveStatus(status as "ALL" | VehicleStatus)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition 
+                ${
+                  activeStatus === status
+                    ? `${statusColors[status]} ring-2 ring-offset-2 ring-blue-400`
+                    : `${statusColors[status]} hover:opacity-80`
+                }`}
+            >
+              {status} ({count})
+            </button>
+          );
+        })}
+      </div>
 
-        <label className="flex flex-col">
-          VIN Number *
-          <input
-            type="text"
-            name="vin_number"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Model Year *
-          <input
-            type="number"
-            name="model_year"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Odometer *
-          <input
-            type="number"
-            name="odometer"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Listed Price *
-          <input
-            type="number"
-            step="0.01"
-            name="listed_price"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Discounted Price *
-          <input
-            type="number"
-            step="0.01"
-            name="discounted_price"
-            className="border p-2"
-          />
-        </label>
-
-        {/* Make Dropdown */}
-        <label className="flex flex-col">
-          Make *
-          <select
-            name="makeId"
-            onChange={(e) => setSelectedMake(Number(e.target.value))}
-            className="border p-2"
-            required
-          >
-            <option value="">-- Select Make --</option>
-            {makes.map((make) => (
-              <option key={make.id} value={make.id}>
-                {make.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* Model Dropdown */}
-        <label className="flex flex-col">
-          Model *
-          <select name="modelId" className="border p-2" required>
-            <option value="">-- Select Model --</option>
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* Optional Fields */}
-        <div className="md:col-span-2 mt-4 mb-2">
-          <h2 className="text-xl font-semibold text-blue-700 mb-2">Details</h2>
-        </div>
-
-        <label className="flex flex-col">
-          Trim
-          <input type="text" name="trim" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Description
-          <textarea name="description" rows={3} className="border p-2" />
-        </label>
-
-        {/* ENUM DROPDOWNS */}
-        <label className="flex flex-col">
-          Status
-          <select name="status" className="border p-2">
-            <option value="">-- Select --</option>
-            {vehicleStatuses.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Body Type
-          <select name="body_type" className="border p-2">
-            <option value="">-- Select --</option>
-            {bodyTypes.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Doors
-          <input type="number" name="doors" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Drive Type
-          <select name="drive_type" className="border p-2">
-            <option value="">-- Select --</option>
-            {driveTypes.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Transmission
-          <select name="transmission" className="border p-2">
-            <option value="">-- Select --</option>
-            {transmissions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Engine
-          <input type="text" name="engine" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Horse Power
-          <input type="number" name="horse_power" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Fuel Type
-          <select name="fuel_type" className="border p-2">
-            <option value="">-- Select --</option>
-            {fuelTypes.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* Remaining fields */}
-        <div className="md:col-span-2 mt-4 mb-2">
-          <h2 className="text-xl font-semibold text-blue-700 mb-2">
-            Specifications
-          </h2>
-        </div>
-
-        <label className="flex flex-col">
-          Fuel Capacity (liters)
-          <input
-            type="number"
-            step="0.1"
-            name="fuel_capacity"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          City Fuel (L/100km)
-          <input
-            type="number"
-            step="0.1"
-            name="city_fuel"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Highway Fuel (L/100km)
-          <input
-            type="number"
-            step="0.1"
-            name="hwy_fuel"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Combined Fuel (L/100km)
-          <input
-            type="number"
-            step="0.1"
-            name="combined_fuel"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Battery Capacity
-          <input type="text" name="battery_capacity" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Exterior Color
-          <input type="text" name="exterior_color" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Interior Color
-          <input type="text" name="interior_color" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Front Legroom (mm)
-          <input
-            type="number"
-            step="0.1"
-            name="front_legroom"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Back Legroom (mm)
-          <input
-            type="number"
-            step="0.1"
-            name="back_legroom"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Cargo Volume (liters)
-          <input
-            type="number"
-            step="0.1"
-            name="cargo_volume"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Features (comma separated)
-          <input type="text" name="features" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Carfax
-          <input type="text" name="carfax" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Comment
-          <textarea name="comment" rows={3} className="border p-2" />
-        </label>
-
-        {/* File Upload */}
-        <div className="flex flex-col gap-2 col-span-2 mt-4">
-          <label className="font-semibold text-gray-700 mb-1">Images</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            id="fileInput"
-            onChange={handleFileChange}
-          />
-          <button
-            type="button"
-            onClick={() => document.getElementById("fileInput")?.click()}
-            className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-150 shadow-sm font-medium"
-          >
-            Select Images
-          </button>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            {images.map((file, index) => (
-              <div
-                key={index}
-                className="bg-gray-100 px-3 py-1 rounded-lg flex items-center gap-2 border border-gray-200 shadow-sm"
-              >
-                <span className="text-sm">{file.name}</span>
-                <button
-                  type="button"
-                  className="text-red-500 font-bold hover:text-red-700 transition"
-                  onClick={() => removeFile(index)}
-                  aria-label="Remove image"
+      {loading ? (
+        <p>Loading vehicles...</p>
+      ) : filteredVehicles.length === 0 ? (
+        <p className="text-gray-500">No vehicles found for {activeStatus}.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredVehicles.map((v) => (
+            <div
+              key={v.id}
+              className="bg-white border rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col overflow-hidden"
+            >
+              {/* Image */}
+              <div className="relative h-48 w-full overflow-hidden">
+                <img
+                  src={"/car-placeholder.png"}
+                  alt={`${v.make?.name} ${v.model?.name}`}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+                {/* Status badge */}
+                <span
+                  className={`absolute top-3 left-3 px-3 py-1 text-xs font-bold rounded-full ${
+                    v.status === "AVAILABLE"
+                      ? "bg-green-600 text-white"
+                      : v.status === "RESERVED"
+                      ? "bg-yellow-500 text-white"
+                      : v.status === "SOLD"
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-400 text-white"
+                  }`}
                 >
-                  ×
+                  {v.status}
+                </span>
+              </div>
+
+              {/* Info */}
+              <div className="p-4 flex flex-col flex-grow">
+                <h3 className="text-lg font-semibold">
+                  {v.make?.name} {v.model?.name}
+                </h3>
+                <p className="text-sm text-gray-500 mb-2">
+                  {v.model_year} • {v.trim}
+                </p>
+
+                <p className="text-2xl font-bold text-blue-600 mb-1">
+                  {formatPrice(v.discounted_price)}
+                </p>
+                <p className="text-sm text-gray-400 line-through mb-3">
+                  {formatPrice(v.listed_price)}
+                </p>
+
+                <div className="mt-auto space-y-1 text-sm text-gray-600">
+                  <p>
+                    <strong>Odometer:</strong> {formatOdometer(v.odometer)}
+                  </p>
+                  <p>
+                    <strong>VIN:</strong> {v.vin_number}
+                  </p>
+                  <p>
+                    <strong>Engine:</strong> {v.engine || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Fuel:</strong> {formatFuel(v.combined_fuel)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="p-4 border-t">
+                <button
+                  onClick={() => setEditingVehicle(v)}
+                  className="w-full bg-maroon text-white py-2 rounded-lg font-semibold hover:bg-red transition"
+                >
+                  View / Edit Details
                 </button>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
+      )}
 
-        <div className="col-span-2 mt-6">
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 focus:bg-blue-800 text-white px-6 py-3 rounded-xl w-full font-semibold shadow transition-colors duration-150"
-          >
-            Create Vehicle
-          </button>
-        </div>
-      </form>
+      {editingVehicle && (
+        <VehicleEditModal
+          vehicle={editingVehicle}
+          onSave={handleSave}
+          onClose={() => setEditingVehicle(null)}
+        />
+      )}
     </div>
   );
 }

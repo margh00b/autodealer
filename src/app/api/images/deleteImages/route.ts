@@ -36,14 +36,14 @@ export async function POST(req: NextRequest) {
 
         await prisma.vehicleImage.delete({ where: { id: image.id } });
         results.push({ id, success: true });
-      } catch (err: any) {
+      } catch (err) {
         console.error(`Failed to delete image ${id}:`, err);
-        results.push({ id, success: false, error: err.message });
+        results.push({ id, success: false, error: (err as Error)?.message });
       }
     }
 
     return NextResponse.json({ results });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Delete images failed:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }

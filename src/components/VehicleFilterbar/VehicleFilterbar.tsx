@@ -28,7 +28,10 @@ export default function VehicleFilterbar({
   onChange,
   vehicles,
 }: Props) {
-  const handleChange = (key: keyof Filters, value: any) => {
+  const handleChange = (
+    key: keyof Filters,
+    value: string | number | [number, number]
+  ) => {
     onChange({ ...filters, [key]: value });
   };
 

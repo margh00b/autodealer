@@ -11,6 +11,8 @@ import useEmblaCarousel from "embla-carousel-react";
 type Slide = {
   image: string;
   title: string;
+  onClick?: () => void;
+  isActive?: boolean;
 };
 
 type EmblaCarouselProps = {
@@ -33,9 +35,28 @@ export default function EmblaCarousel({ slides, options }: EmblaCarouselProps) {
       <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container">
           {slides.map((item) => (
-            <div className="embla__slide" key={item.title}>
-              <img className="w-52" src={item.image} alt={item.title} />
-              <p className="mt-3 text-sm font-bold">{item.title}</p>
+            <div
+              key={item.title}
+              onClick={item.onClick}
+              className={`embla__slide  cursor-pointer text-center transition-all duration-200 m-2 p-6! rounded-lg
+                ${
+                  item.isActive
+                    ? " bg-red-50"
+                    : " hover:scale-105 hover:shadow-sm"
+                }`}
+            >
+              <img
+                className="w-7/12 mx-auto object-contain"
+                src={item.image}
+                alt={item.title}
+              />
+              <p
+                className={`mt-3 text-sm font-bold ${
+                  item.isActive ? "text-maroon" : "text-gray-700"
+                }`}
+              >
+                {item.title}
+              </p>
             </div>
           ))}
         </div>

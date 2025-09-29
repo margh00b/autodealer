@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
         doors: true,
         drive_type: true,
         features: true,
+        status: true,
         make: {
           select: { name: true },
         },

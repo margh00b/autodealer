@@ -1,5 +1,5 @@
 import { R2_CONFIG, r2Client } from "@/lib/r2-client";
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -54,8 +54,6 @@ const VehicleSchema = z.object({
     )
     .optional()
     .default([]),
-
-  
 
   // Metadata
   carfax: z.string().optional().nullable(),
@@ -161,7 +159,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(fullVehicle, { status: 201 });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Vehicle upload failed:", err);
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues }, { status: 400 });

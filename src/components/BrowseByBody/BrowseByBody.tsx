@@ -3,16 +3,19 @@
 import EmblaCarousel from "../EmblaCarousel/Carousel";
 import { EmblaOptionsType } from "embla-carousel";
 import "../EmblaCarousel/css/embla.css";
-import { testR2Connection } from "@/lib/r2-client";
+import { Filters } from "@/components/VehicleFilterbar/VehicleFilterbar";
 
-export default function BrowseByBody() {
-  const handleTest = async () => {
-    const res = await fetch("/api/test-r2");
-    const data = await res.json();
-    console.log("Connection success:", data.success);
-  };
+type BrowseByBodyProps = {
+  filters: Filters;
+  setFilters: React.Dispatch<React.SetStateAction<Filters>>;
+};
 
+export default function BrowseByBody({
+  filters,
+  setFilters,
+}: BrowseByBodyProps) {
   const OPTIONS: EmblaOptionsType = { align: "start" };
+
   const SLIDES = [
     { image: "/BodyTypes/SUV.svg", title: "SUV" },
     { image: "/BodyTypes/Truck.svg", title: "Truck" },
@@ -24,9 +27,20 @@ export default function BrowseByBody() {
     { image: "/BodyTypes/Wagon.svg", title: "Wagon" },
   ];
 
+  const slidesWithHandlers = SLIDES.map((slide) => ({
+    ...slide,
+    isActive: filters.bodyType === slide.title,
+    onClick: () => {
+      setFilters((prev) => ({
+        ...prev,
+        bodyType: prev.bodyType === slide.title ? "" : slide.title,
+      }));
+    },
+  }));
+
   return (
     <div>
-      <EmblaCarousel slides={SLIDES} options={OPTIONS} />
+      <EmblaCarousel slides={slidesWithHandlers} options={OPTIONS} />
     </div>
   );
 }

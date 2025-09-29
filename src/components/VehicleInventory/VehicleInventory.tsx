@@ -62,6 +62,7 @@ export default function VehicleInventory({
   // Filter vehicles
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) => {
+      if (v.status !== "AVAILABLE") return false;
       const price = v.discounted_price ?? 0;
 
       if (filters.make && v.make?.name !== filters.make) return false;
@@ -95,15 +96,23 @@ export default function VehicleInventory({
   //TODO: Add proper skeleton loading
   if (loading)
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {Array.from({ length: numberOfListings ?? 6 }).map((_, idx) => (
           <div
             key={idx}
-            className="border rounded-lg p-4 animate-pulse flex flex-col gap-2 h-64"
+            className="bg-gray-200 rounded-3xl p-4 animate-pulse flex flex-col gap-4"
           >
-            <div className="bg-gray-300 h-32 w-full rounded"></div>
-            <div className="bg-gray-300 h-4 w-3/4 rounded"></div>
-            <div className="bg-gray-300 h-4 w-1/2 rounded"></div>
+            {/* Image placeholder */}
+            <div className="bg-gray-300 h-48 w-full rounded-2xl"></div>
+
+            {/* Title placeholder */}
+            <div className="bg-gray-300 h-6 w-3/4 rounded-lg"></div>
+
+            {/* Sub-info placeholder */}
+            <div className="bg-gray-300 h-4 w-1/2 rounded-lg"></div>
+
+            {/* Price placeholder */}
+            <div className="bg-gray-300 h-6 w-1/3 rounded-lg mt-auto"></div>
           </div>
         ))}
       </div>

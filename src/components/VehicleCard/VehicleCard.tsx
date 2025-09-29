@@ -37,7 +37,7 @@ export default function VehicleCard({
         setImages(
           signedImages.length ? signedImages : [{ url: "/car-placeholder.png" }]
         );
-      } catch (err: any) {
+      } catch (err) {
         console.error("Could not fetch signed images:", err);
         setImages([{ url: "/car-placeholder.png" }]);
       } finally {

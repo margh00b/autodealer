@@ -26,7 +26,8 @@ export default function Home() {
       <Navbar />
       <Hero />
       <SearchBar filters={filters} setFilters={setFilters} />
-      <BrowseByBody />
+      <BrowseByBody filters={filters} setFilters={setFilters} />
+
       <div
         id="inventory"
         className=" flex flex-col items-center bg-thinGrey my-20 p-5"
