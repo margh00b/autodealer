@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../../prisma/client";
 interface Context {
-  params: {
-    params: Promise<{ id: string }>;
-  };
+  params: Promise<{ id: string }>;
 }
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: Context) {
   try {
     const id = Number(context.params.id);
     const body = await req.json();
