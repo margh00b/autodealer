@@ -2,11 +2,20 @@ import { R2_CONFIG, r2Client } from "@/lib/r2-client";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+
 import prisma from "../../../../../prisma/client";
 import { Upload } from "@aws-sdk/lib-storage";
 
-const VehicleSchema = z.object({
+import { z } from "zod";
+import {
+  vehicleStatus,
+  bodyType,
+  driveType,
+  transmissions,
+  fuelType,
+} from "@prisma/client";
+
+export const VehicleSchema = z.object({
   // Identifiers
   vin_number: z.string(),
   model_year: z.coerce.number().int(),
@@ -18,19 +27,19 @@ const VehicleSchema = z.object({
   discounted_price: z.coerce.number().optional().nullable(),
 
   // Status
-  status: z.string().optional().nullable(), // OPEN, SOLD, etc.
+  status: z.nativeEnum(vehicleStatus).optional().nullable(),
 
   // Basic details
   odometer: z.coerce.number().int(),
-  body_type: z.string().optional().nullable(),
+  body_type: z.nativeEnum(bodyType).optional().nullable(),
   doors: z.coerce.number().int().optional().nullable(),
-  drive_type: z.string().optional().nullable(),
-  transmission: z.string().optional().nullable(),
+  drive_type: z.nativeEnum(driveType).optional().nullable(),
+  transmission: z.nativeEnum(transmissions).optional().nullable(),
   engine: z.string().optional().nullable(),
   horse_power: z.coerce.number().int().optional().nullable(),
 
   // Fuel & battery
-  fuel_type: z.string().optional().nullable(),
+  fuel_type: z.nativeEnum(fuelType).optional().nullable(),
   fuel_capacity: z.coerce.number().optional().nullable(),
   city_fuel: z.coerce.number().optional().nullable(),
   hwy_fuel: z.coerce.number().optional().nullable(),
@@ -63,7 +72,6 @@ const VehicleSchema = z.object({
   makeId: z.coerce.number().int(),
   modelId: z.coerce.number().int(),
 });
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
