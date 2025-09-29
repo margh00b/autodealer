@@ -7,14 +7,37 @@ import prisma from "../../../../../prisma/client";
 import { Upload } from "@aws-sdk/lib-storage";
 
 import { z } from "zod";
-import {
-  vehicleStatus,
-  bodyType,
-  driveType,
-  transmissions,
-  fuelType,
-} from "@prisma/client";
 
+// Enums as literal arrays
+const VehicleStatusEnum = [
+  "AVAILABLE",
+  "RESERVED",
+  "SOLD",
+  "PENDING",
+  "UNAVAILABLE",
+] as const;
+const BodyTypeEnum = [
+  "CONVERTIBLE",
+  "COUPE",
+  "HATCHBACK",
+  "MINIVAN",
+  "SEDAN",
+  "SUV",
+  "TRUCK",
+  "WAGON",
+] as const;
+const DriveTypeEnum = ["FWD", "RWD", "AWD", "FOURWD"] as const;
+const TransmissionsEnum = ["AUTOMATIC", "MANUAL"] as const;
+const FuelTypeEnum = ["PETROL", "DIESEL", "ELECTRIC"] as const;
+
+// Zod Enums
+const VehicleStatus = z.enum(VehicleStatusEnum).optional().nullable();
+const BodyType = z.enum(BodyTypeEnum).optional().nullable();
+const DriveType = z.enum(DriveTypeEnum).optional().nullable();
+const Transmission = z.enum(TransmissionsEnum).optional().nullable();
+const FuelType = z.enum(FuelTypeEnum).optional().nullable();
+
+// Full Vehicle Zod Schema
 export const VehicleSchema = z.object({
   // Identifiers
   vin_number: z.string(),
@@ -27,19 +50,19 @@ export const VehicleSchema = z.object({
   discounted_price: z.coerce.number().optional().nullable(),
 
   // Status
-  status: z.nativeEnum(vehicleStatus).optional().nullable(),
+  status: VehicleStatus,
 
   // Basic details
   odometer: z.coerce.number().int(),
-  body_type: z.nativeEnum(bodyType).optional().nullable(),
+  body_type: BodyType,
   doors: z.coerce.number().int().optional().nullable(),
-  drive_type: z.nativeEnum(driveType).optional().nullable(),
-  transmission: z.nativeEnum(transmissions).optional().nullable(),
+  drive_type: DriveType,
+  transmission: Transmission,
   engine: z.string().optional().nullable(),
   horse_power: z.coerce.number().int().optional().nullable(),
 
   // Fuel & battery
-  fuel_type: z.nativeEnum(fuelType).optional().nullable(),
+  fuel_type: FuelType,
   fuel_capacity: z.coerce.number().optional().nullable(),
   city_fuel: z.coerce.number().optional().nullable(),
   hwy_fuel: z.coerce.number().optional().nullable(),
@@ -55,7 +78,7 @@ export const VehicleSchema = z.object({
   back_legroom: z.coerce.number().optional().nullable(),
   cargo_volume: z.coerce.number().optional().nullable(),
 
-  // Features (arrays in Prisma, not CSV strings)
+  // Features
   features: z
     .union([z.string(), z.array(z.string())])
     .transform((val) =>
@@ -72,6 +95,7 @@ export const VehicleSchema = z.object({
   makeId: z.coerce.number().int(),
   modelId: z.coerce.number().int(),
 });
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
