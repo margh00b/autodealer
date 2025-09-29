@@ -100,44 +100,8 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
-    const raw = Object.fromEntries(formData.entries()) as Record<string, any>;
-    /* const data = VehicleSchema.parse(raw); */
-    const data = {
-      vin_number: raw.vin_number,
-      model_year: Number(raw.model_year),
-      trim: raw.trim ?? null,
-      description: raw.description ?? null,
-      listed_price: Number(raw.listed_price),
-      discounted_price: raw.discounted_price ? Number(raw.discounted_price) : 0,
-      status: raw.status ?? "AVAILABLE",
-      odometer: Number(raw.odometer),
-      body_type: raw.body_type ?? null,
-      doors: raw.doors ? Number(raw.doors) : null,
-      drive_type: raw.drive_type ?? null,
-      transmission: raw.transmission ?? null,
-      engine: raw.engine ?? null,
-      horse_power: raw.horse_power ? Number(raw.horse_power) : null,
-      fuel_type: raw.fuel_type ?? null,
-      fuel_capacity: raw.fuel_capacity ? Number(raw.fuel_capacity) : null,
-      city_fuel: raw.city_fuel ? Number(raw.city_fuel) : null,
-      hwy_fuel: raw.hwy_fuel ? Number(raw.hwy_fuel) : null,
-      combined_fuel: raw.combined_fuel ? Number(raw.combined_fuel) : null,
-      battery_capacity: raw.battery_capacity ?? null,
-      exterior_color: raw.exterior_color ?? null,
-      interior_color: raw.interior_color ?? null,
-      front_legroom: raw.front_legroom ? Number(raw.front_legroom) : null,
-      back_legroom: raw.back_legroom ? Number(raw.back_legroom) : null,
-      cargo_volume: raw.cargo_volume ? Number(raw.cargo_volume) : null,
-      features: raw.features
-        ? Array.isArray(raw.features)
-          ? raw.features
-          : (raw.features as string).split(",").map((s) => s.trim())
-        : [],
-      carfax: raw.carfax ?? null,
-      comment: raw.comment ?? null,
-      makeId: Number(raw.makeId),
-      modelId: Number(raw.modelId),
-    };
+    const raw = Object.fromEntries(formData.entries());
+    const data = VehicleSchema.parse(raw);
     const files = formData.getAll("images") as File[];
 
     // 1. Create vehicle first (without images)

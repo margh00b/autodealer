@@ -15,7 +15,7 @@ export default function VehicleDetail({
 }) {
   const unwrappedParams = use(params);
   const { id } = unwrappedParams;
-  const [vehicle, setVehicle] = useState<Partial<Vehicle> | null>(null);
+  const [vehicle, setVehicle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
