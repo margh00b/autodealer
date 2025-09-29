@@ -3,7 +3,7 @@ import prisma from "../../../../../prisma/client";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   try {
@@ -20,27 +20,8 @@ export async function GET(
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
-    // Generate signed URLs for images
-    /* const signedImages = await Promise.all(
-      vehicle.images.map(async (img: any) => {
-        const command = new GetObjectCommand({
-          Bucket: process.env.R2_BUCKET_NAME!,
-          Key: img.key,
-        });
-
-        const signedUrl = await getSignedUrl(r2Client, command, {
-          expiresIn: 3600,
-        });
-        return {
-          ...img,
-          signedUrl,
-        };
-      })
-    ); */
-
     return NextResponse.json({
       ...vehicle,
-      /* images: signedImages, */
     });
   } catch (err) {
     console.error(err);
