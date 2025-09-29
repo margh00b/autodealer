@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../../prisma/client";
 interface Context {
   params: {
-    id: string;
+    params: Promise<{ id: string }>;
   };
 }
 
