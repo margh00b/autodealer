@@ -1,13 +1,13 @@
 import Link from "next/link";
 
-export default function Navbar({ css }: { css?: string }) {
-  const links = [
-    { href: "/", label: "Home" },
-    { href: "/vehicles", label: "Inventory" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
-  ];
-
+export default function Navbar({
+  css,
+  items,
+}: {
+  css?: string;
+  items: { href: string; label: string }[];
+}) {
+  const links = items;
   return (
     <nav className={`absolute top-0 w-full z-50 ${css} transition-all`}>
       <div className="flex justify-center items-center h-16 space-x-10 text-white">

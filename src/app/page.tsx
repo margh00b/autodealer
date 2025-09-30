@@ -21,9 +21,15 @@ export default function Home() {
     exteriorColor: "",
     interiorColor: "",
   });
+  const links = [
+    { href: "/", label: "Home" },
+    { href: "/vehicles", label: "Inventory" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+  ];
   return (
     <div>
-      <Navbar />
+      <Navbar items={links}/>
       <Hero />
       <SearchBar filters={filters} setFilters={setFilters} />
       <BrowseByBody filters={filters} setFilters={setFilters} />

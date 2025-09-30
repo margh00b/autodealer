@@ -1,10 +1,7 @@
 "use client";
 
-import Hero from "@/components/Hero/Hero";
-import Navbar from "@/components/Navbar/Navbar";
 import VehiclePricing from "@/components/VehicleListing/VehiclePricing/VehiclePricing";
 import VehicleSummary from "@/components/VehicleListing/VehicleSummary/VehicleSummary";
-import { Vehicle } from "@/types/vehicle";
 import { notFound } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
@@ -55,8 +52,6 @@ export default function VehicleDetail({
   };
   return (
     <div>
-      <Navbar />
-      <Hero />
       <div className="flex w-3/4 mx-auto mt-[-70px]">
         <VehicleSummary vehicle={vehicle} />
         <VehiclePricing pricing={pricing} vehicle={vehicle} />

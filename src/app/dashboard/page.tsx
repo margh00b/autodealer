@@ -1,9 +1,20 @@
 "use client";
 
-import VehicleEditModal from "@/components/VehicleEditModal/VehicleEditModal";
 import { Vehicle } from "@/types/vehicle";
-import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 import { toast } from "sonner";
 
 enum VehicleStatus {
@@ -14,22 +25,22 @@ enum VehicleStatus {
   UNAVAILABLE = "UNAVAILABLE",
 }
 
-const statusColors: Record<string, string> = {
-  ALL: "bg-gray-200 text-gray-800",
-  AVAILABLE: "bg-green-100 text-green-700",
-  RESERVED: "bg-yellow-100 text-yellow-700",
-  SOLD: "bg-red-100 text-red-700",
-  PENDING: "bg-blue-100 text-blue-700",
-  UNAVAILABLE: "bg-gray-100 text-gray-700",
+const statusColors: Record<VehicleStatus, string> = {
+  AVAILABLE: "#7f1d1d", // deep maroon
+  RESERVED: "#6b7280", // medium gray
+  SOLD: "#b91c1c", // brighter red-maroon
+  PENDING: "#fbbf24", // golden
+  UNAVAILABLE: "#374151", // dark gray-blue
 };
 
-export default function DashboardListings() {
+type StatusCount = {
+  status: string;
+  count: number;
+};
+
+export default function DashboardPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [activeStatus, setActiveStatus] = useState<"ALL" | VehicleStatus>(
-    "ALL"
-  );
 
   const fetchVehicles = useCallback(async () => {
     setLoading(true);
@@ -39,11 +50,8 @@ export default function DashboardListings() {
       const data = await res.json();
       setVehicles(data);
     } catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An unknown error occurred");
-      }
+      if (err instanceof Error) toast.error(err.message);
+      else toast.error("Unknown error");
     } finally {
       setLoading(false);
     }
@@ -53,185 +61,142 @@ export default function DashboardListings() {
     fetchVehicles();
   }, [fetchVehicles]);
 
-  const handleSave = async (id: number, editedData: Partial<Vehicle>) => {
-    try {
-      const {
-        id: _id,
-        make,
-        model,
-        images,
-        availabilityForms,
-        ...updateData
-      } = editedData;
-
-      const filteredUpdateData = Object.fromEntries(
-        Object.entries(updateData).filter(
-          ([_, value]) => value !== undefined && value !== null
-        )
-      );
-
-      const res = await fetch(`/api/dashboard/updateVehicle/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(filteredUpdateData),
-      });
-
-      if (!res.ok) throw new Error("Failed to update vehicle");
-      const updated = await res.json();
-      setVehicles((prev) => prev.map((v) => (v.id === id ? updated : v)));
-      setEditingVehicle(null);
-      toast.success("Vehicle updated successfully! 🎉");
-    } catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An unknown error occurred");
-      }
-      throw err;
-    }
-  };
-
-  const formatPrice = (value?: number) =>
-    value ? `$${value.toLocaleString()}` : "-";
-  const formatOdometer = (value?: number) =>
-    value ? `${value.toLocaleString()} km` : "-";
-  const formatFuel = (value?: number) =>
-    value ? `${value.toFixed(1)} L/100km` : "-";
-
-  // Group vehicles by status
-  const vehiclesByStatus = Object.values(VehicleStatus).reduce(
-    (acc, status) => {
-      acc[status] = vehicles.filter((v) => v.status === status);
-      return acc;
-    },
-    {} as Record<VehicleStatus, Vehicle[]>
+  const vehiclesByStatus: StatusCount[] = Object.values(VehicleStatus).map(
+    (status) => ({
+      status,
+      count: vehicles.filter((v) => v.status === status).length,
+    })
   );
 
-  const filteredVehicles =
-    activeStatus === "ALL" ? vehicles : vehiclesByStatus[activeStatus] || [];
+  const total = vehicles.length;
+
+  // Top 5 models by count
+  const modelCounts = Object.entries(
+    vehicles.reduce((acc: Record<string, number>, v) => {
+      const makeName = v.make?.name ?? "Unknown Make";
+      const modelName = v.model?.name ?? "Unknown Model";
+      const key = `${makeName} ${modelName}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .map(([model, count]) => ({ model, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   return (
-    <div className="p-6 max-w-full mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-extrabold ">Dealer Dashboard</h1>
-        <Link
-          href="/dashboard/create"
-          className="inline-flex items-center gap-2 bg-maroon hover:bg-red text-white px-5 py-2.5 rounded-lg font-semibold shadow transition"
-        >
-          <span className="text-lg">+</span> Create Vehicle
-        </Link>
-      </div>
-      {/* Status Pills */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        {["ALL", ...Object.values(VehicleStatus)].map((status) => {
-          const count =
-            status === "ALL"
-              ? vehicles.length
-              : vehiclesByStatus[status as VehicleStatus]?.length || 0;
-
-          return (
-            <button
-              key={status}
-              onClick={() => setActiveStatus(status as "ALL" | VehicleStatus)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition 
-                ${
-                  activeStatus === status
-                    ? `${statusColors[status]} ring-2 ring-offset-2 ring-blue-400`
-                    : `${statusColors[status]} hover:opacity-80`
-                }`}
-            >
-              {status} ({count})
-            </button>
-          );
-        })}
-      </div>
+    <div className="p-8 max-w-7xl mx-auto space-y-8 ">
+      <h1 className="text-4xl font-extrabold tracking-tight">Dashboard</h1>
 
       {loading ? (
-        <p>Loading vehicles...</p>
-      ) : filteredVehicles.length === 0 ? (
-        <p className="text-gray-500">No vehicles found for {activeStatus}.</p>
+        <p className="text-gray-500">Loading dashboard...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredVehicles.map((v) => (
-            <div
-              key={v.id}
-              className="bg-white border rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 hover:scale-[1.02] flex flex-col overflow-hidden"
-            >
-              {/* Image */}
-              <div className="relative h-48 w-full overflow-hidden">
-                <img
-                  src={"/car-placeholder.png"}
-                  alt={`${v.make?.name} ${v.model?.name}`}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-                {/* Status badge */}
-                <span
-                  className={`absolute top-3 left-3 px-3 py-1 text-xs font-bold rounded-full ${
-                    v.status === "AVAILABLE"
-                      ? "bg-green-600 text-white"
-                      : v.status === "RESERVED"
-                      ? "bg-yellow-500 text-white"
-                      : v.status === "SOLD"
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-400 text-white"
-                  }`}
-                >
-                  {v.status}
-                </span>
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Inventory Overview */}
+            <div className="bg-white shadow-lg rounded-2xl border border-gray-200 hover:shadow-xl transition">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Inventory Overview
+                </h2>
               </div>
-
-              {/* Info */}
-              <div className="p-4 flex flex-col flex-grow">
-                <h3 className="text-lg font-semibold">
-                  {v.make?.name} {v.model?.name}
-                </h3>
-                <p className="text-sm text-gray-500 mb-2">
-                  {v.model_year} • {v.trim}
-                </p>
-
-                <p className="text-2xl font-bold text-blue-600 mb-1">
-                  {formatPrice(v.discounted_price)}
-                </p>
-                <p className="text-sm text-gray-400 line-through mb-3">
-                  {formatPrice(v.listed_price)}
-                </p>
-
-                <div className="mt-auto space-y-1 text-sm text-gray-600">
-                  <p>
-                    <strong>Odometer:</strong> {formatOdometer(v.odometer)}
-                  </p>
-                  <p>
-                    <strong>VIN:</strong> {v.vin_number}
-                  </p>
-                  <p>
-                    <strong>Engine:</strong> {v.engine || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Fuel:</strong> {formatFuel(v.combined_fuel)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <div className="p-4 border-t">
-                <button
-                  onClick={() => setEditingVehicle(v)}
-                  className="w-full bg-maroon text-white py-2 rounded-lg font-semibold hover:bg-red transition"
-                >
-                  View / Edit Details
-                </button>
+              <div className="p-6">
+                <ul className="space-y-3">
+                  <li className="flex justify-between font-bold text-gray-800 pb-2 border-b">
+                    <span>Total Vehicles</span>
+                    <span>{total}</span>
+                  </li>
+                  {vehiclesByStatus.map((item) => (
+                    <li
+                      key={item.status}
+                      className="flex justify-between items-center text-gray-700 border-b pb-2 last:border-none"
+                    >
+                      <span className="flex items-center gap-3">
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-gray-300"
+                          style={{
+                            backgroundColor:
+                              statusColors[item.status as VehicleStatus],
+                          }}
+                        />
+                        <span className="font-medium">{item.status}</span>
+                      </span>
+                      <span className="px-3 py-0.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
+                        {item.count}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+            {/* Inventory Pie */}
+            <div className="bg-white  shadow-lg rounded-2xl border border-gray-200 hover:shadow-xl transition">
+              <div className="px-4 py-3">
+                <h2 className="text-lg font-bold">Inventory by Status</h2>
+              </div>
+              <div className="p-4 h-72 border-t border-gray-100">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={vehiclesByStatus}
+                      dataKey="count"
+                      nameKey="status"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      legendType="circle"
+                      label={{
+                        position: "middle",
+                        fill: "#fff",
+                        fontSize: 10,
+                      }}
+                      labelLine={false}
+                    >
+                      {vehiclesByStatus.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={statusColors[entry.status as VehicleStatus]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend iconSize={8} wrapperStyle={{ fontSize: "12px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
 
-      {editingVehicle && (
-        <VehicleEditModal
-          vehicle={editingVehicle}
-          onSave={handleSave}
-          onClose={() => setEditingVehicle(null)}
-        />
+          {/* Additional Insights: Top Models */}
+          <div className="bg-white shadow-lg rounded-2xl border border-gray-200 hover:shadow-xl transition">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Top 5 Popular Models
+              </h2>
+            </div>
+            <div className="p-6 h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={modelCounts}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 50 }}
+                  barSize={40}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="model"
+                    tick={{ fontSize: 12 }}
+                    interval={0}
+                    angle={-35}
+                    textAnchor="end"
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#7f1d1d" radius={[5, 5, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
