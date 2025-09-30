@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const links = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/dashboard/inventory", label: "Inventory" },
-    { href: "/leads", label: "Leads" },
+    { href: "/dashboard/leads", label: "Leads" },
     { href: "/testdrives", label: "Test Drives" },
   ];
   return (

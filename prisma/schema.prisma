@@ -98,15 +98,41 @@ model vehicleAvailabilityForm {
   lastName String
   email String
   phone String
+  lead_status leadStatus@default(NEW)
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
   vehicleId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model tradeAppraisalForm {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+
+  // Vehicle info
+  make      String
+  model     String
+  year      Int?
+  trim      String?
+  odometer  Int?
+  bodyType  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
 
 //enums
-
+enum leadStatus {
+  NEW
+  CONTACTED
+  LOST
+  CONVERTED
+}
 enum vehicleStatus {
   AVAILABLE
   RESERVED

@@ -59,18 +59,14 @@ export default function SearchBar({ filters, setFilters }: SearchBarProps) {
 
   const types = [
     "Any Type",
+    "Convertible",
+    "Coupe",
+    "Hatchback",
+    "Minivan",
     "Sedan",
     "SUV",
     "Truck",
-    "Coupe",
-    "Convertible",
-    "Hatchback",
     "Wagon",
-    "Crossover",
-    "Sports Car",
-    "Luxury",
-    "Electric",
-    "Hybrid",
   ];
 
   useEffect(() => {
