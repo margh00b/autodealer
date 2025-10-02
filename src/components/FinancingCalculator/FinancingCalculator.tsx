@@ -1,13 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 interface FinancingCalculatorProps {
   price: number;
+  vehicleId: number;
+  vehicleMake?: string;
+  vehicleModel?: string;
 }
 
 export default function FinancingCalculator({
   price,
+  vehicleId,
+  vehicleMake,
+  vehicleModel,
 }: FinancingCalculatorProps) {
   const [vehiclePrice, setVehiclePrice] = useState<number>(price); // now editable
   const [loanTerm, setLoanTerm] = useState<number>(60); // months
@@ -17,8 +24,13 @@ export default function FinancingCalculator({
   const [paymentFrequency, setPaymentFrequency] = useState<
     "Monthly" | "Biweekly"
   >("Monthly");
+  const router = useRouter();
+  const goToFinancing = () => {
+    router.push(
+      `/forms/financing?vehicleId=${vehicleId}&make=${vehicleMake}&model=${vehicleModel}`
+    );
+  };
 
-  // If the prop changes, update internal state
   useEffect(() => {
     setVehiclePrice(price);
   }, [price]);
@@ -146,6 +158,12 @@ export default function FinancingCalculator({
           })}
         </p>
       </div>
+      <button
+        onClick={goToFinancing}
+        className="cursor-pointer w-full bg-maroon text-white py-4 rounded-lg font-semibold hover:bg-red transition disabled:opacity-50"
+      >
+        Apply for Financing
+      </button>
     </div>
   );
 }

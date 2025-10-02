@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import SearchBar from "@/components/SearchBar/SearchBar";
 import { Filters } from "@/components/VehicleFilterbar/VehicleFilterbar";
 import VehicleInventory from "@/components/VehicleInventory/VehicleInventory";
+import ViewInventory from "@/components/ViewInventory/ViewInventory";
 import { useState } from "react";
 
 export default function Home() {
@@ -24,25 +25,28 @@ export default function Home() {
   const links = [
     { href: "/", label: "Home" },
     { href: "/vehicles", label: "Inventory" },
+    { href: "/forms/tradeappraisal", label: "Trade-in" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ];
   return (
     <div>
-      <Navbar items={links}/>
+      <Navbar items={links} />
       <Hero />
       <SearchBar filters={filters} setFilters={setFilters} />
       <BrowseByBody filters={filters} setFilters={setFilters} />
 
       <div
         id="inventory"
-        className=" flex flex-col items-center bg-thinGrey my-20 p-5"
+        className=" flex flex-col items-center bg-thinGrey mt-20 p-5"
       >
         <div className="text-2xl text-center font-bold mb-10">
           <h1>INVENTORY</h1>
         </div>
         <VehicleInventory numberOfListings={6} initialFilters={filters} />
       </div>
+
+      <ViewInventory />
       <Footer />
     </div>
   );

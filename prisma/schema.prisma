@@ -80,6 +80,7 @@ model Vehicle {
   model            Model    @relation(fields: [modelId], references: [id])
   images           VehicleImage[]
   availabilityForms vehicleAvailabilityForm[]
+  financingForms financingForm[]
 }
 
 model VehicleImage {
@@ -111,7 +112,7 @@ model tradeAppraisalForm {
   lastName  String
   email     String
   phone     String
-
+  lead_status leadStatus@default(NEW)
   // Vehicle info
   make      String
   model     String
@@ -124,6 +125,70 @@ model tradeAppraisalForm {
   updatedAt DateTime @updatedAt
 }
 
+model financingForm {
+  id                   Int      @id @default(autoincrement())
+  
+  // Personal Information
+  salutation           String?
+  gender               String?
+  firstName            String
+  lastName             String
+  phone                String
+  email                String
+  maritalStatus        String
+  birthDate            DateTime
+  sin                  String?
+
+  // Current Address
+  currentAddress       String
+  currentCity          String
+  currentProvince      String
+  currentPostalCode    String
+  currentDurationYear  Int
+  currentDurationMonth Int
+  homeStatus           String
+  monthlyPayment       Float?
+
+  // Previous Address (optional if lived <2 years)
+  prevAddress          String?
+  prevCity             String?
+  prevProvince         String?
+  prevPostalCode       String?
+  prevDurationYear     Int?
+  prevDurationMonth    Int?
+
+  // Current Employment
+  employmentType        String
+  employer             String
+  occupation           String
+  employmentAddress    String
+  employmentCity       String
+  employmentProvince   String
+  employmentPostalCode String
+  employmentPhone      String?
+  employmentDurationYear Int
+  employmentDurationMonth Int
+  grossIncome          Float
+
+  // Previous Employment (optional if duration <2 years)
+  prevEmployer         String?
+  prevEmploymentPhone  String?
+  prevEmploymentDurationYear Int?
+  prevEmploymentDurationMonth Int?
+
+  // Other Information
+  bankruptcy           String?
+  repossession         String?
+  coSignerAvailable    String?
+  creditRating         String?
+
+  // Metadata
+  lead_status leadStatus@default(NEW)
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId Int
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
 
 
 //enums

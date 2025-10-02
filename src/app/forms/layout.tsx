@@ -5,7 +5,7 @@ import Hero from "@/components/Hero/Hero";
 import Navbar from "@/components/Navbar/Navbar";
 import { ReactNode } from "react";
 
-export default function VehiclesLayout({ children }: { children: ReactNode }) {
+export default function FormsLayout({ children }: { children: ReactNode }) {
   const links = [
     { href: "/", label: "Home" },
     { href: "/vehicles", label: "Inventory" },
@@ -14,13 +14,13 @@ export default function VehiclesLayout({ children }: { children: ReactNode }) {
     { href: "/contact", label: "Contact" },
   ];
   return (
-    <>
+    <div className="min-h-screen">
       <Navbar items={links} />
       <Hero />
-      <div className="min-h-screen">
-        <main className="">{children}</main>
-      </div>
+      <main className="mt-[-100px] bg-white rounded-3xl mx-15 shadow-2xl">
+        {children}
+      </main>
       <Footer />
-    </>
+    </div>
   );
 }
