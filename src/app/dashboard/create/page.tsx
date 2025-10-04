@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { VehicleCreationForm } from "@/components/Dashboard/VehicleCreationForm/VehicleCreationForm";
+
 interface Make {
   id: number;
   name: string;
@@ -12,32 +14,22 @@ interface Model {
   id: number;
   name: string;
 }
+
+const reorder = <T,>(list: T[], startIndex: number, endIndex: number): T[] => {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+  return result;
+};
+
 export default function VehicleDashboard() {
   const [images, setImages] = useState<File[]>([]);
   const [makes, setMakes] = useState<Make[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedMake, setSelectedMake] = useState<number | null>(null);
 
-  const vehicleStatuses = [
-    "AVAILABLE",
-    "RESERVED",
-    "SOLD",
-    "PENDING",
-    "UNAVAILABLE",
-  ];
-  const bodyTypes = [
-    "CONVERTIBLE",
-    "COUPE",
-    "HATCHBACK",
-    "MINIVAN",
-    "SEDAN",
-    "SUV",
-    "TRUCK",
-    "WAGON",
-  ];
-  const driveTypes = ["FWD", "RWD", "AWD", "FOURWD"];
-  const transmissions = ["AUTOMATIC", "MANUAL"];
-  const fuelTypes = ["PETROL", "DIESEL", "ELECTRIC"];
+  const dragItemIndex = useRef<number | null>(null);
+  const dragOverElement = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetch("/api/makes")
@@ -45,6 +37,7 @@ export default function VehicleDashboard() {
       .then(setMakes)
       .catch(console.error);
   }, []);
+
   useEffect(() => {
     if (!selectedMake) {
       setModels([]);
@@ -57,17 +50,22 @@ export default function VehicleDashboard() {
   }, [selectedMake]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(Array.from(e.target.files));
+    const newFiles = e.target.files;
+    if (newFiles) {
+      const filesArray = Array.from(newFiles);
+      setImages((prev) => [...prev, ...filesArray]);
       e.target.value = "";
     }
+  };
+
+  const removeFile = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const form = e.currentTarget; // save the form element
-
+    const form = e.currentTarget;
     const formData = new FormData(form);
     images.forEach((file) => formData.append("images", file));
 
@@ -85,7 +83,6 @@ export default function VehicleDashboard() {
         setImages([]);
         setSelectedMake(null);
         setModels([]);
-
         return data;
       })(),
       {
@@ -96,8 +93,107 @@ export default function VehicleDashboard() {
     );
   };
 
-  const removeFile = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+  const clearDragOverStyles = () => {
+    if (dragOverElement.current) {
+      dragOverElement.current.classList.remove(
+        "border-l-maroon",
+        "border-r-maroon",
+        "border-l-gray-200",
+        "border-r-gray-200"
+      );
+
+      dragOverElement.current.classList.add("border-gray-200");
+      dragOverElement.current = null;
+    }
+  };
+
+  const handleDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    index: number
+  ) => {
+    dragItemIndex.current = index;
+    e.dataTransfer.effectAllowed = "move";
+    e.currentTarget.classList.add("opacity-40");
+  };
+
+  const handleDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    index: number
+  ) => {
+    e.preventDefault();
+    if (dragItemIndex.current === null || dragItemIndex.current === index)
+      return;
+
+    const targetElement = e.currentTarget;
+    const rect = targetElement.getBoundingClientRect();
+    const x = e.clientX;
+    const isOverLeftHalf = x < rect.left + rect.width / 2;
+
+    clearDragOverStyles();
+
+    targetElement.classList.remove("border-gray-200");
+
+    if (isOverLeftHalf) {
+      targetElement.classList.add("border-l-maroon", "border-r-gray-200");
+    } else {
+      targetElement.classList.add("border-r-maroon", "border-l-gray-200");
+    }
+
+    dragOverElement.current = targetElement;
+  };
+
+  const resetBorderStyles = (element: EventTarget & HTMLDivElement) => {
+    element.classList.remove(
+      "border-l-maroon",
+      "border-r-maroon",
+      "border-l-gray-200",
+      "border-r-gray-200"
+    );
+
+    element.classList.add("border-gray-200");
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    clearDragOverStyles();
+    resetBorderStyles(e.currentTarget);
+  };
+
+  const handleDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    dropIndex: number
+  ) => {
+    e.preventDefault();
+    const dragIndex = dragItemIndex.current;
+
+    clearDragOverStyles();
+    const draggedElement = document.querySelector(".opacity-40");
+    if (draggedElement) draggedElement.classList.remove("opacity-40");
+
+    resetBorderStyles(e.currentTarget);
+
+    if (dragIndex === null || dragIndex === dropIndex) {
+      dragItemIndex.current = null;
+      return;
+    }
+
+    const targetElement = e.currentTarget;
+    const rect = targetElement.getBoundingClientRect();
+    const x = e.clientX;
+    const isDropBefore = x < rect.left + rect.width / 2;
+
+    let newIndex = dropIndex;
+    if (!isDropBefore) newIndex = dropIndex + 1;
+    if (dragIndex < newIndex) newIndex--;
+
+    setImages((prevImages) => reorder(prevImages, dragIndex, newIndex));
+    dragItemIndex.current = null;
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove("opacity-40");
+    clearDragOverStyles();
+    resetBorderStyles(e.currentTarget);
+    dragItemIndex.current = null;
   };
 
   return (
@@ -111,345 +207,20 @@ export default function VehicleDashboard() {
           <span className="text-lg">←</span> Back to Dashboard
         </Link>
       </div>
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white shadow-lg p-8 rounded-2xl border border-gray-100"
-      >
-        {/* Mandatory Fields */}
-        <div className="md:col-span-2 mb-2">
-          <h2 className="text-xl font-semibold text-maroon mb-2">
-            Basic Information
-          </h2>
-        </div>
-
-        <label className="flex flex-col">
-          VIN Number *
-          <input
-            type="text"
-            name="vin_number"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Model Year *
-          <input
-            type="number"
-            name="model_year"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Odometer *
-          <input
-            type="number"
-            name="odometer"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Listed Price *
-          <input
-            type="number"
-            step="0.01"
-            name="listed_price"
-            required
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Discounted Price *
-          <input
-            type="number"
-            step="0.01"
-            name="discounted_price"
-            className="border p-2"
-          />
-        </label>
-
-        {/* Make Dropdown */}
-        <label className="flex flex-col">
-          Make *
-          <select
-            name="makeId"
-            onChange={(e) => setSelectedMake(Number(e.target.value))}
-            className="border p-2"
-            required
-          >
-            <option value="">-- Select Make --</option>
-            {makes.map((make) => (
-              <option key={make.id} value={make.id}>
-                {make.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* Model Dropdown */}
-        <label className="flex flex-col">
-          Model *
-          <select name="modelId" className="border p-2" required>
-            <option value="">-- Select Model --</option>
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* Optional Fields */}
-        <div className="md:col-span-2 mt-4 mb-2">
-          <h2 className="text-xl font-semibold text-maroon mb-2">Details</h2>
-        </div>
-
-        <label className="flex flex-col">
-          Trim
-          <input type="text" name="trim" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Description
-          <textarea name="description" rows={3} className="border p-2" />
-        </label>
-
-        {/* ENUM DROPDOWNS */}
-        <label className="flex flex-col">
-          Status
-          <select name="status" className="border p-2">
-            <option value="">-- Select --</option>
-            {vehicleStatuses.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Body Type
-          <select name="body_type" className="border p-2">
-            <option value="">-- Select --</option>
-            {bodyTypes.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Doors
-          <input type="number" name="doors" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Drive Type
-          <select name="drive_type" className="border p-2">
-            <option value="">-- Select --</option>
-            {driveTypes.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Transmission
-          <select name="transmission" className="border p-2">
-            <option value="">-- Select --</option>
-            {transmissions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col">
-          Engine
-          <input type="text" name="engine" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Horse Power
-          <input type="number" name="horse_power" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Fuel Type
-          <select name="fuel_type" className="border p-2">
-            <option value="">-- Select --</option>
-            {fuelTypes.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* Remaining fields */}
-        <div className="md:col-span-2 mt-4 mb-2">
-          <h2 className="text-xl font-semibold text-maroon mb-2">
-            Specifications
-          </h2>
-        </div>
-
-        <label className="flex flex-col">
-          Fuel Capacity (liters)
-          <input
-            type="number"
-            step="0.1"
-            name="fuel_capacity"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          City Fuel (L/100km)
-          <input
-            type="number"
-            step="0.1"
-            name="city_fuel"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Highway Fuel (L/100km)
-          <input
-            type="number"
-            step="0.1"
-            name="hwy_fuel"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Combined Fuel (L/100km)
-          <input
-            type="number"
-            step="0.1"
-            name="combined_fuel"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Battery Capacity
-          <input type="text" name="battery_capacity" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Exterior Color
-          <input type="text" name="exterior_color" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Interior Color
-          <input type="text" name="interior_color" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col">
-          Front Legroom (mm)
-          <input
-            type="number"
-            step="0.1"
-            name="front_legroom"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Back Legroom (mm)
-          <input
-            type="number"
-            step="0.1"
-            name="back_legroom"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col">
-          Cargo Volume (liters)
-          <input
-            type="number"
-            step="0.1"
-            name="cargo_volume"
-            className="border p-2"
-          />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Features (comma separated)
-          <input type="text" name="features" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Carfax
-          <input type="text" name="carfax" className="border p-2" />
-        </label>
-
-        <label className="flex flex-col col-span-2">
-          Comment
-          <textarea name="comment" rows={3} className="border p-2" />
-        </label>
-
-        {/* File Upload */}
-        <div className="flex flex-col gap-2 col-span-2 mt-4">
-          <label className="font-semibold text-gray-700 mb-1">Images</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            id="fileInput"
-            onChange={handleFileChange}
-          />
-          <button
-            type="button"
-            onClick={() => document.getElementById("fileInput")?.click()}
-            className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-150 shadow-sm font-medium"
-          >
-            Select Images
-          </button>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            {images.map((file, index) => (
-              <div
-                key={index}
-                className="bg-gray-100 px-3 py-1 rounded-lg flex items-center gap-2 border border-gray-200 shadow-sm"
-              >
-                <span className="text-sm">{file.name}</span>
-                <button
-                  type="button"
-                  className="text-red-500 font-bold hover:text-red-700 transition"
-                  onClick={() => removeFile(index)}
-                  aria-label="Remove image"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="col-span-2 mt-6">
-          <button
-            type="submit"
-            className="bg-red hover:bg-maroon focus:bg-maroon text-white px-6 py-3 rounded-xl w-full font-semibold shadow transition-colors duration-150"
-          >
-            Create Vehicle
-          </button>
-        </div>
-      </form>
+      <VehicleCreationForm
+        images={images}
+        makes={makes}
+        models={models}
+        handleSubmit={handleSubmit}
+        setSelectedMake={setSelectedMake}
+        handleFileChange={handleFileChange}
+        removeFile={removeFile}
+        handleDragStart={handleDragStart}
+        handleDragOver={handleDragOver}
+        handleDragLeave={handleDragLeave}
+        handleDrop={handleDrop}
+        handleDragEnd={handleDragEnd}
+      />
     </div>
   );
 }
