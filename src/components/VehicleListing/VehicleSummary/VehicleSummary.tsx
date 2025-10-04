@@ -49,64 +49,99 @@ export default function VehicleSummary({ vehicle }: { vehicle: Vehicle }) {
       )}
 
       {/* Highlights */}
-      <SectionCard>
-        <h2 className="text-xl font-semibold mb-2">Highlights</h2>
-        <ul className="space-y-1">
-          <li>Odometer: {vehicle.odometer.toLocaleString()} km</li>
-          <li>Body Type: {vehicle.body_type}</li>
-          <li>Doors: {vehicle.doors}</li>
-          <li>Drive Type: {vehicle.drive_type}</li>
-          <li>Transmission: {vehicle.transmission}</li>
-          <li>Engine: {vehicle.engine}</li>
-          {vehicle.horse_power && <li>Horsepower: {vehicle.horse_power} hp</li>}
-        </ul>
-      </SectionCard>
+      {(vehicle.odometer > 0 ||
+        vehicle.body_type ||
+        (vehicle.doors ?? 0) > 0 ||
+        vehicle.drive_type ||
+        vehicle.transmission ||
+        vehicle.engine ||
+        (vehicle.horse_power ?? 0) > 0) && (
+        <SectionCard>
+          <h2 className="text-xl font-semibold mb-2">Highlights</h2>
+          <ul className="space-y-1">
+            {vehicle.odometer > 0 && (
+              <li>Odometer: {vehicle.odometer.toLocaleString()} km</li>
+            )}
+            {vehicle.body_type && <li>Body Type: {vehicle.body_type}</li>}
+            {(vehicle.doors ?? 0) > 0 && <li>Doors: {vehicle.doors}</li>}
+            {vehicle.drive_type && <li>Drive Type: {vehicle.drive_type}</li>}
+            {vehicle.transmission && (
+              <li>Transmission: {vehicle.transmission}</li>
+            )}
+            {vehicle.engine && <li>Engine: {vehicle.engine}</li>}
+            {(vehicle.horse_power ?? 0) > 0 && (
+              <li>Horsepower: {vehicle.horse_power} hp</li>
+            )}
+          </ul>
+        </SectionCard>
+      )}
 
       {/* Fuel & Battery */}
-      <SectionCard>
-        <h2 className="text-xl font-semibold mb-2">Fuel & Battery</h2>
-        <ul className="space-y-1">
-          <li>Fuel Type: {vehicle.fuel_type}</li>
-          {vehicle.fuel_capacity && (
-            <li>Fuel Capacity: {vehicle.fuel_capacity} L</li>
-          )}
-          {vehicle.city_fuel && (
-            <li>City Fuel Economy: {vehicle.city_fuel} L/100km</li>
-          )}
-          {vehicle.hwy_fuel && (
-            <li>Highway Fuel Economy: {vehicle.hwy_fuel} L/100km</li>
-          )}
-          {vehicle.combined_fuel && (
-            <li>Combined: {vehicle.combined_fuel} L/100km</li>
-          )}
-          {vehicle.battery_capacity && (
-            <li>Battery: {vehicle.battery_capacity}</li>
-          )}
-        </ul>
-      </SectionCard>
+      {(vehicle.fuel_type ||
+        (vehicle.fuel_capacity ?? 0) > 0 ||
+        (vehicle.city_fuel ?? 0) > 0 ||
+        (vehicle.hwy_fuel ?? 0) > 0 ||
+        (vehicle.combined_fuel ?? 0) > 0 ||
+        vehicle.battery_capacity) && (
+        <SectionCard>
+          <h2 className="text-xl font-semibold mb-2">Fuel & Battery</h2>
+          <ul className="space-y-1">
+            {vehicle.fuel_type && <li>Fuel Type: {vehicle.fuel_type}</li>}
+            {(vehicle.fuel_capacity ?? 0) > 0 && (
+              <li>Fuel Capacity: {vehicle.fuel_capacity} L</li>
+            )}
+            {(vehicle.city_fuel ?? 0) > 0 && (
+              <li>City Fuel Economy: {vehicle.city_fuel} L/100km</li>
+            )}
+            {(vehicle.hwy_fuel ?? 0) > 0 && (
+              <li>Highway Fuel Economy: {vehicle.hwy_fuel} L/100km</li>
+            )}
+            {(vehicle.combined_fuel ?? 0) > 0 && (
+              <li>Combined: {vehicle.combined_fuel} L/100km</li>
+            )}
+            {vehicle.battery_capacity && (
+              <li>Battery: {vehicle.battery_capacity}</li>
+            )}
+          </ul>
+        </SectionCard>
+      )}
+
+      {/* Measurements */}
+      {((vehicle.front_legroom ?? 0) > 0 ||
+        (vehicle.back_legroom ?? 0) > 0 ||
+        (vehicle.cargo_volume ?? 0) > 0) && (
+        <SectionCard>
+          <h2 className="text-xl font-semibold mb-2">Measurements</h2>
+          <ul className="space-y-1">
+            {(vehicle.front_legroom ?? 0) > 0 && (
+              <li>Front Legroom: {vehicle.front_legroom} mm</li>
+            )}
+            {(vehicle.back_legroom ?? 0) > 0 && (
+              <li>Rear Legroom: {vehicle.back_legroom} mm</li>
+            )}
+            {(vehicle.cargo_volume ?? 0) > 0 && (
+              <li>Cargo Volume: {vehicle.cargo_volume} L</li>
+            )}
+          </ul>
+        </SectionCard>
+      )}
 
       {/* Colors */}
       <SectionCard>
         <h2 className="text-xl font-semibold mb-2">Colors</h2>
         <ul className="space-y-1">
-          <li>Exterior: {vehicle.exterior_color}</li>
-          <li>Interior: {vehicle.interior_color}</li>
-        </ul>
-      </SectionCard>
-
-      {/* Measurements */}
-      <SectionCard>
-        <h2 className="text-xl font-semibold mb-2">Measurements</h2>
-        <ul className="space-y-1">
-          {vehicle.front_legroom && (
-            <li>Front Legroom: {vehicle.front_legroom} mm</li>
-          )}
-          {vehicle.back_legroom && (
-            <li>Rear Legroom: {vehicle.back_legroom} mm</li>
-          )}
-          {vehicle.cargo_volume && (
-            <li>Cargo Volume: {vehicle.cargo_volume} L</li>
-          )}
+          <li>
+            Exterior: {vehicle.exterior_color}{" "}
+            <span
+              className={`h-5 w-5 bg-red bg-${vehicle.exterior_color}`}
+            ></span>
+          </li>
+          <li>
+            Interior: {vehicle.interior_color}{" "}
+            <span
+              className={`h-5 w-5 bg-red bg-${vehicle.interior_color}`}
+            ></span>
+          </li>
         </ul>
       </SectionCard>
 
