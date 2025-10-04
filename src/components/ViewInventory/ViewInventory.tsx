@@ -55,7 +55,7 @@ export default function ViewInventory() {
       <div className="text-center">
         <Link
           href="/vehicles"
-          className="inline-block bg-maroon text-white font-semibold px-6 py-3 rounded-lg hover:bg-red transition"
+          className="inline-block bg-red text-white font-semibold rounded-lg shadow-md hover:bg-maroon transition-all px-6 py-3"
         >
           View All Vehicles
         </Link>

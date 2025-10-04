@@ -42,11 +42,13 @@ export default function CustomDropdown({
   };
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative ${className} `} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-5 py-3 border border-gray-300 rounded-full shadow-sm bg-white text-gray-800 text-lg focus:outline-none focus:ring-2 focus:ring-red focus:border-red transition-all duration-200 flex items-center justify-between"
+        className={`w-full px-5 py-3 border border-gray-300 cursor-pointer ${
+          isOpen ? "rounded-b-none rounded-t-3xl " : ""
+        } rounded-3xl shadow-sm bg-white text-gray-800 text-lg focus:outline-none   transition-all duration-200 flex items-center justify-between`}
       >
         <span
           className={value === placeholder ? "text-gray-500" : "text-gray-800"}
@@ -71,7 +73,7 @@ export default function CustomDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {options.map((option, index) => (
             <button
               key={index}

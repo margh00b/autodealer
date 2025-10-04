@@ -97,7 +97,7 @@ export default function VehicleCard({
           <section className="divide-y divide-gray-200">
             <Link href={`/vehicles/${vehicle.id}`} className="block">
               {/* Image */}
-              <div className="h-48 w-full bg-gray-200 overflow-hidden rounded">
+              <div className="h-fit w-full bg-gray-200 overflow-hidden rounded">
                 {loadingImages ? (
                   <div className="animate-pulse h-full w-full bg-gray-300" />
                 ) : (
@@ -150,12 +150,14 @@ export default function VehicleCard({
                     .map((f: string, idx: number) => (
                       <span
                         key={idx}
-                        className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium"
+                        className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium 
+                               max-w-[calc(100%-6rem)]"
                       >
-                        {f}
+                        <span className="overflow-hidden whitespace-nowrap text-ellipsis">
+                          {f}
+                        </span>
                       </span>
                     ))}
-
                   {vehicle.features.length > 1 && (
                     <span className="inline-flex bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full text-sm font-medium">
                       +{vehicle.features.length - 1} more

@@ -85,7 +85,7 @@ export default function SearchBar({ filters, setFilters }: SearchBarProps) {
 
     fetch(`/api/models?makeId=${selectedMakeId}`)
       .then((res) => res.json())
-      .then((data) => setModels([{ id: 0, name: "Any Model" }, ...data]))
+      .then((data) => setModels([...data]))
       .catch(console.error);
   }, [selectedMakeId]);
 
@@ -114,12 +114,12 @@ export default function SearchBar({ filters, setFilters }: SearchBarProps) {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 mt-[-70px] z-50">
+    <div className="relative w-full max-w-7xl mx-auto px-4 mt-[-50px] z-90">
       <div className="bg-white shadow-2xl rounded-full p-6 md:p-4 flex flex-col md:flex-row gap-4 items-center">
         {/* Make */}
         <div className="flex-1 w-full md:w-auto">
           <CustomDropdown
-            options={makes.map((m) => m.name)}
+            options={["Any Make", ...makes.map((m) => m.name)]}
             value={searchData.make}
             onChange={(value) => {
               const make = makes.find((m) => m.name === value);
@@ -136,7 +136,7 @@ export default function SearchBar({ filters, setFilters }: SearchBarProps) {
         {/* Model */}
         <div className="flex-1 w-full md:w-auto">
           <CustomDropdown
-            options={models.map((m) => m.name)}
+            options={["Any Model", ...models.map((m) => m.name)]}
             value={searchData.model}
             onChange={(value) => handleInputChange("model", value)}
           />
@@ -163,7 +163,7 @@ export default function SearchBar({ filters, setFilters }: SearchBarProps) {
         {/* Search Button */}
         <button
           onClick={handleSearch}
-          className="w-full md:w-auto bg-red-600 text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-700"
+          className="w-full md:w-auto bg-red text-white font-semibold shadow-md hover:bg-maroon transition-all px-8 py-3 rounded-3xl  hover:shadow-xl  duration-300 transform hover:scale-95 cursor-pointer"
         >
           Search
         </button>
