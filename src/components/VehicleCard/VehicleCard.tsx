@@ -59,7 +59,7 @@ export default function VehicleCard({
   }, [vehicle.id]);
 
   return (
-    <div className="max-w-100 rounded-lg shadow-xl bg-white border-thinGrey border-1 flex flex-col overflow-hidden hover:shadow-2xl hover:border-maroon/20 duration-200 ease-in">
+    <>
       {loadingCard ? (
         // Skeleton Loader
         <div className="animate-pulse w-60 h-130 bg-white border rounded-lg shadow flex flex-col overflow-hidden">
@@ -93,8 +93,8 @@ export default function VehicleCard({
           </div>
         </div>
       ) : (
-        <div className="divide-y divide-gray-200">
-          <section className="divide-y divide-gray-200">
+        <div className="max-w-100 rounded-lg shadow-xl bg-white border-thinGrey border-1 flex flex-col overflow-hidden hover:shadow-2xl hover:border-maroon/20 duration-200 ease-in">
+          <section className="divide-y divide-gray-200 flex-grow">
             <Link href={`/vehicles/${vehicle.id}`} className="block">
               {/* Image */}
               <div className="h-fit w-full bg-gray-200 overflow-hidden rounded">
@@ -111,7 +111,7 @@ export default function VehicleCard({
 
               {/* Title + Price Row */}
               <div className="flex divide-x divide-gray-200 items-start p-3">
-                <div className="w-full mr-10">
+                <div className="w-4/6 mr-2 px-1">
                   <h2 className="font-bold text-lg">
                     {vehicle.make.name} {vehicle.model.name} {vehicle?.trim}
                   </h2>
@@ -144,25 +144,27 @@ export default function VehicleCard({
 
               {/* Features Section */}
               {vehicle.features && vehicle.features.length > 0 && (
-                <div className="p-3 flex flex-wrap gap-2 overflow-hidden max-h-[3.5rem]">
-                  {vehicle.features
-                    .slice(0, 1)
-                    .map((f: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium 
+                <div className="p-3 flex flex-wrap gap-2 overflow-hidden ">
+                  <div className="max-h-[6rem] overflow-hidden">
+                    {vehicle.features
+                      .slice(0, 3)
+                      .map((f: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium 
                                max-w-[calc(100%-6rem)]"
-                      >
-                        <span className="overflow-hidden whitespace-nowrap text-ellipsis">
-                          {f}
+                        >
+                          <span className="overflow-hidden whitespace-nowrap text-ellipsis">
+                            {f}
+                          </span>
                         </span>
+                      ))}
+                    {vehicle.features.length > 1 && (
+                      <span className="inline-flex bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full text-sm font-medium">
+                        +{vehicle.features.length - 1} more
                       </span>
-                    ))}
-                  {vehicle.features.length > 1 && (
-                    <span className="inline-flex bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full text-sm font-medium">
-                      +{vehicle.features.length - 1} more
-                    </span>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
             </Link>
@@ -185,6 +187,6 @@ export default function VehicleCard({
           </section>
         </div>
       )}
-    </div>
+    </>
   );
 }

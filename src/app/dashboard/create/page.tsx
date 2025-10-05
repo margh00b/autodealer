@@ -199,7 +199,7 @@ export default function VehicleDashboard() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-extrabold ">Create Vehicle</h1>
+        <h1 className="text-3xl font-bold">Create Vehicle</h1>
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 bg-maroon hover:bg-red text-white px-5 py-2.5 rounded-lg font-semibold shadow transition"

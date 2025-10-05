@@ -4,9 +4,9 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer
-      className={`relative w-full ${styles.bgGrainy} rounded-t-[60%_40%] text-white`}
+      className={`relative w-full ${styles.bgGrainy} rounded-t-[80%_20%] text-white mt-10`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 mt-15">
+      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 mt-5">
         {/* About / Info Section */}
         <div>
           <h3 className="font-bold text-lg mb-3">About Us</h3>
