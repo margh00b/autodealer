@@ -162,11 +162,14 @@ export default function VehicleFilterbar({
           className="w-full border border-gray-300 rounded-lg p-2 hover:border-gray-400"
         >
           <option value="">All</option>
-          {driveTypes.map((d, i) => (
-            <option key={i} value={d}>
-              {d}
-            </option>
-          ))}
+          {driveTypes.map((b, i) => {
+            const display = b === "FOURWD" ? "4x4" : b;
+            return (
+              <option key={i} value={b}>
+                {display}
+              </option>
+            );
+          })}
         </select>
       </div>
 

@@ -164,7 +164,55 @@ export default function LeadsPage() {
   };
 
   if (loading)
-    return <p className="text-center mt-10 text-gray-600">Loading leads...</p>;
+    return (
+      <div className="p-8 max-w-7xl mx-auto text-gray-600">
+        {/* Spinner */}
+        <div className="flex flex-col items-center justify-center mb-8">
+          <div className="w-10 h-10 border-4 border-maroon border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-3 font-medium">Loading leads...</p>
+        </div>
+
+        {/* Skeleton Table */}
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded-lg shadow-md">
+              <thead>
+                <tr className="bg-gray-100">
+                  {["Name", "Email", "Phone", "Status"].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-sm font-medium text-gray-500"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
 
   // Lead data based on selected tab
   const currentLeads =

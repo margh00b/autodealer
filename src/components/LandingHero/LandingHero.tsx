@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function LandingHero() {
   return (
     <section className="relative h-[90vh] flex flex-col md:flex-row items-center justify-between px-6 md:px-16 py-24 bg-white text-gray-900 overflow-hidden">
       {/* Hero Text */}
-      <div className="z-10 flex-1 space-y-6 text-center md:text-left">
+      <motion.div
+        initial={{ x: -80 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.3, ease: "linear" }}
+        className="z-10 flex-1 space-y-6 text-center md:text-left"
+      >
         <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-red-600">
           Find your <span className="text-red-800">dream car</span>
         </h1>
@@ -22,10 +28,15 @@ export default function LandingHero() {
         >
           View Inventory
         </Link>
-      </div>
+      </motion.div>
 
-      {/* Fixed Car Image */}
-      <div className="absolute top-0 right-0 w-[60%] md:w-[50%] lg:w-[45%] pointer-events-none select-none">
+      {/* Animated Car Image */}
+      <motion.div
+        initial={{ x: 200 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.3, ease: "linear" }}
+        className="absolute top-0 right-0 w-[60%] md:w-[50%] lg:w-[45%] pointer-events-none select-none"
+      >
         <Image
           src="/car.png"
           alt="Car illustration"
@@ -34,7 +45,7 @@ export default function LandingHero() {
           className="w-full h-full object-contain"
           priority
         />
-      </div>
+      </motion.div>
     </section>
   );
 }

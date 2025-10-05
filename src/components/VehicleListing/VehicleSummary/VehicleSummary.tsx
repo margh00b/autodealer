@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 export default function VehicleSummary({ vehicle }: { vehicle: Vehicle }) {
   const OPTIONS: EmblaOptionsType = { align: "start" };
 
-  // helper component for sections
   const SectionCard = ({ children }: { children: React.ReactNode }) => (
     <div className="bg-white rounded-xl shadow-md p-4 mt-6">{children}</div>
   );
@@ -36,7 +35,7 @@ export default function VehicleSummary({ vehicle }: { vehicle: Vehicle }) {
       <h1 className="text-3xl font-bold">
         {vehicle.make.name} {vehicle.model.name} ({vehicle.model_year})
       </h1>
-      <p className="text-gray-600 mt-2">VIN: {vehicle.vin_number}</p>
+      <p className="text-gray-600 mt-2 font-bold">VIN: {vehicle.vin_number}</p>
       <p className="text-gray-600">Stock #: {vehicle.id}</p>
       <VehicleCarousel images={images} options={OPTIONS} />
 

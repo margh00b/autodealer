@@ -35,7 +35,7 @@ export default function ViewInventory() {
         Explore Our Inventory
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 mx-20">
         {features.map((feature, idx) => (
           <div key={idx} className="flex items-start gap-3">
             {/* Icon */}

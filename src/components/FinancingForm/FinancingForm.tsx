@@ -54,7 +54,7 @@ export default function FinancingForm() {
     repossession: "",
     coSignerAvailable: "",
     creditRating: "",
-    vehicleId: vehicleIdFromUrl, // pre-fill vehicleId
+    vehicleId: vehicleIdFromUrl,
   });
   const [loading, setLoading] = useState(false);
 
@@ -77,11 +77,16 @@ export default function FinancingForm() {
       });
 
       if (res.ok) {
-        toast.success("✅ Financing form submitted successfully!");
+        toast.success("✅ Submitted! We will get in touch with you shortly!");
+
         setFormData(
-          Object.fromEntries(
-            Object.keys(formData).map((k) => [k, ""])
-          ) as typeof formData
+          (prev) =>
+            Object.fromEntries(
+              Object.entries(prev).map(([key, value]) => [
+                key,
+                key === "vehicleId" ? value : "",
+              ])
+            ) as typeof formData
         );
       } else {
         toast.error("❌ Failed to submit financing form.");

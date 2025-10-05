@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { EmblaOptionsType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import { usePrevNextButtons } from "./EmblaCarouselArrowButtons";
+import "./css/embla.css";
 
 type Slide = {
   id: string;
@@ -20,6 +21,7 @@ export default function VehicleCarousel({
   images,
   options,
 }: EmblaCarouselProps) {
+  const [ready, setReady] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
 
   const {
@@ -29,17 +31,15 @@ export default function VehicleCarousel({
     onNextButtonClick,
   } = usePrevNextButtons(emblaApi);
 
-  // Recalculate carousel once all images are loaded
   useEffect(() => {
-    if (!emblaApi) return;
-
     const imgs =
       document.querySelectorAll<HTMLImageElement>(".embla__slide img");
-    let loadedCount = 0;
+    if (!imgs.length) return;
 
+    let loadedCount = 0;
     const checkAllLoaded = () => {
       loadedCount++;
-      if (loadedCount === imgs.length) emblaApi.reInit();
+      if (loadedCount === imgs.length) setReady(true);
     };
 
     imgs.forEach((img) => {
@@ -47,19 +47,23 @@ export default function VehicleCarousel({
         checkAllLoaded();
       } else {
         img.addEventListener("load", checkAllLoaded);
-        img.addEventListener("error", checkAllLoaded); // handle broken images
+        img.addEventListener("error", checkAllLoaded);
       }
     });
-  }, [emblaApi, images]);
+  }, [images]);
+
+  useEffect(() => {
+    if (ready && emblaApi) emblaApi.reInit();
+  }, [ready, emblaApi]);
 
   return (
-    <section className="embla relative mx-auto mt-10 mb-10">
-      <div className="embla__viewport overflow-hidden" ref={emblaRef}>
-        <div className="embla__container flex">
+    <section className="relative mx-auto mt-10 mb-10">
+      <div className="relative overflow-hidden mx-8" ref={emblaRef}>
+        <div className="flex backface-hidden touch-pan-y touch-pinch-zoom ">
           {images.map((item) => (
             <div
               key={item.id}
-              className="embla__slide flex-[0_0_45%] mx-2 flex justify-center items-center "
+              className="flex flex-col flex-[0_0_45%]  mx-2 justify-center items-center "
             >
               <img
                 className="w-full h-full object-contain rounded max-h-[400px]"
@@ -73,7 +77,7 @@ export default function VehicleCarousel({
 
       {/* Prev Button */}
       <button
-        className="absolute top-1/2 left-2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-700 shadow-lg hover:bg-gray-100 disabled:opacity-50"
+        className="absolute cursor-pointer top-1/2 left-2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-700 shadow-lg hover:bg-gray-100 disabled:opacity-50"
         onClick={onPrevButtonClick}
         disabled={prevBtnDisabled}
       >
@@ -82,7 +86,7 @@ export default function VehicleCarousel({
 
       {/* Next Button */}
       <button
-        className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-700 shadow-lg hover:bg-gray-100 disabled:opacity-50"
+        className="absolute cursor-pointer top-1/2 right-2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-700 shadow-lg hover:bg-gray-100 disabled:opacity-50"
         onClick={onNextButtonClick}
         disabled={nextBtnDisabled}
       >

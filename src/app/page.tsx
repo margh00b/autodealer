@@ -33,12 +33,11 @@ export default function Home() {
   return (
     <div>
       <NavbarHome items={links} />
-      {/* <Hero /> */}
       <LandingHero />
       <SearchBar filters={filters} setFilters={setFilters} />
       <BrowseByBody filters={filters} setFilters={setFilters} />
 
-      {/* <div
+      <div
         id="inventory"
         className=" flex flex-col items-center bg-thinGrey mt-20 p-5"
       >
@@ -46,7 +45,7 @@ export default function Home() {
           <h1>INVENTORY</h1>
         </div>
         <VehicleInventory numberOfListings={6} initialFilters={filters} />
-      </div> */}
+      </div>
 
       <ViewInventory />
       <Footer />

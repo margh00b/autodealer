@@ -147,7 +147,46 @@ export default function DashboardListings() {
       </div>
 
       {loading ? (
-        <p>Loading vehicles...</p>
+        <div className="p-8 mx-auto text-gray-600">
+          {/* Spinner */}
+          <div className="flex flex-col items-center justify-center mb-8">
+            <div className="w-10 h-10 border-4 border-maroon border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-3 font-medium">Loading vehicles...</p>
+          </div>
+
+          {/* Skeleton vehicle cards */}
+          <div className="space-y-3 animate-pulse">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center bg-white rounded-lg shadow-sm p-4"
+              >
+                {/* Left side (vehicle info) */}
+                <div className="flex flex-col gap-2 min-w-[180px]">
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  <div className="h-3 bg-gray-200 rounded w-24"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+
+                {/* Middle (price & details) */}
+                <div className="flex flex-col gap-2 flex-grow">
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                  <div className="flex gap-3">
+                    <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    <div className="h-3 bg-gray-200 rounded w-20"></div>
+                    <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </div>
+
+                {/* Right side (status + edit button) */}
+                <div className="flex gap-6 items-center">
+                  <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
+                  <div className="h-8 w-16 bg-gray-300 rounded-full"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : filteredVehicles.length === 0 ? (
         <p className="text-gray-500">No vehicles found for {activeStatus}.</p>
       ) : (

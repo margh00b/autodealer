@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import CustomDropdown from "./CustomDropdown";
 import { Filters } from "../VehicleFilterbar/VehicleFilterbar";
+import { motion } from "framer-motion";
 
 interface SearchData {
   make: string;
@@ -114,60 +115,67 @@ export default function SearchBar({ filters, setFilters }: SearchBarProps) {
   };
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto px-4 mt-[-50px] z-90">
-      <div className="bg-white shadow-2xl rounded-full p-6 md:p-4 flex flex-col md:flex-row gap-4 items-center">
-        {/* Make */}
-        <div className="flex-1 w-full md:w-auto">
-          <CustomDropdown
-            options={["Any Make", ...makes.map((m) => m.name)]}
-            value={searchData.make}
-            onChange={(value) => {
-              const make = makes.find((m) => m.name === value);
-              setSelectedMakeId(make?.id ?? null);
-              setSearchData((prev) => ({
-                ...prev,
-                make: value,
-                model: "Any Model",
-              }));
-            }}
-          />
-        </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: "linear" }}
+      className="z-10 flex-1 space-y-6 text-center md:text-left"
+    >
+      <div className="relative w-full max-w-7xl mx-auto px-4 mt-[-50px] z-90">
+        <div className="bg-white shadow-2xl rounded-full p-6 md:p-4 flex flex-col md:flex-row gap-4 items-center">
+          {/* Make */}
+          <div className="flex-1 w-full md:w-auto">
+            <CustomDropdown
+              options={["Any Make", ...makes.map((m) => m.name)]}
+              value={searchData.make}
+              onChange={(value) => {
+                const make = makes.find((m) => m.name === value);
+                setSelectedMakeId(make?.id ?? null);
+                setSearchData((prev) => ({
+                  ...prev,
+                  make: value,
+                  model: "Any Model",
+                }));
+              }}
+            />
+          </div>
 
-        {/* Model */}
-        <div className="flex-1 w-full md:w-auto">
-          <CustomDropdown
-            options={["Any Model", ...models.map((m) => m.name)]}
-            value={searchData.model}
-            onChange={(value) => handleInputChange("model", value)}
-          />
-        </div>
+          {/* Model */}
+          <div className="flex-1 w-full md:w-auto">
+            <CustomDropdown
+              options={["Any Model", ...models.map((m) => m.name)]}
+              value={searchData.model}
+              onChange={(value) => handleInputChange("model", value)}
+            />
+          </div>
 
-        {/* Year */}
-        <div className="flex-1 w-full md:w-auto">
-          <CustomDropdown
-            options={years}
-            value={searchData.year}
-            onChange={(value) => handleInputChange("year", value)}
-          />
-        </div>
+          {/* Year */}
+          <div className="flex-1 w-full md:w-auto">
+            <CustomDropdown
+              options={years}
+              value={searchData.year}
+              onChange={(value) => handleInputChange("year", value)}
+            />
+          </div>
 
-        {/* Type */}
-        <div className="flex-1 w-full md:w-auto">
-          <CustomDropdown
-            options={types}
-            value={searchData.type}
-            onChange={(value) => handleInputChange("type", value)}
-          />
-        </div>
+          {/* Type */}
+          <div className="flex-1 w-full md:w-auto">
+            <CustomDropdown
+              options={types}
+              value={searchData.type}
+              onChange={(value) => handleInputChange("type", value)}
+            />
+          </div>
 
-        {/* Search Button */}
-        <button
-          onClick={handleSearch}
-          className="w-full md:w-auto bg-red text-white font-semibold shadow-md hover:bg-maroon transition-all px-8 py-3 rounded-3xl  hover:shadow-xl  duration-300 transform hover:scale-95 cursor-pointer"
-        >
-          Search
-        </button>
+          {/* Search Button */}
+          <button
+            onClick={handleSearch}
+            className="w-full md:w-auto bg-red text-white font-semibold shadow-md hover:bg-maroon transition-all px-8 py-3 rounded-3xl  hover:shadow-xl  duration-300 transform hover:scale-95 cursor-pointer"
+          >
+            Search
+          </button>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

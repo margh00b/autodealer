@@ -112,12 +112,16 @@ export default function VehicleCard({
               {/* Title + Price Row */}
               <div className="flex divide-x divide-gray-200 items-start p-3">
                 <div className="w-4/6 mr-2 px-1">
-                  <h2 className="font-bold text-lg">
-                    {vehicle.make.name} {vehicle.model.name} {vehicle?.trim}
+                  <h2 className="flex flex-col font-bold text-lg pb-0.5">
+                    {vehicle.make.name} {vehicle.model.name}{" "}
+                    <span className="text-xs">{vehicle?.trim}</span>
                   </h2>
                   <p className="text-gray-600 font-bold text-sm">
-                    {vehicle.model_year} | {vehicle.drive_type} |{" "}
-                    {vehicle.doors ? `${vehicle.doors}dr` : ""}
+                    {vehicle.model_year} |{" "}
+                    {vehicle.drive_type == "FOURWD"
+                      ? "4x4"
+                      : vehicle.drive_type}{" "}
+                    | {vehicle.doors ? `${vehicle.doors}dr` : ""}
                   </p>
                 </div>
                 <div className="text-right w-fit">
@@ -151,7 +155,7 @@ export default function VehicleCard({
                       .map((f: string, idx: number) => (
                         <span
                           key={idx}
-                          className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium 
+                          className="inline-flex bg-green-100 text-green-800 px-2 py-0.5 m-0.5 rounded-full text-sm font-medium 
                                max-w-[calc(100%-6rem)]"
                         >
                           <span className="overflow-hidden whitespace-nowrap text-ellipsis">

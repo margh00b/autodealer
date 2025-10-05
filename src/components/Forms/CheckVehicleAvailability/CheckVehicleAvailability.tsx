@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function CheckVehicleAvailability({
   vehicleId,
@@ -22,7 +23,6 @@ export default function CheckVehicleAvailability({
   });
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,7 +35,6 @@ export default function CheckVehicleAvailability({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
 
     try {
       const res = await fetch("/api/forms/vehicleAvailability", {
@@ -45,7 +44,8 @@ export default function CheckVehicleAvailability({
       });
 
       if (res.ok) {
-        setMessage("✅ Request submitted successfully!");
+        toast.success("✅ Request submitted successfully!");
+
         setFormData({
           firstName: "",
           lastName: "",
@@ -59,11 +59,11 @@ export default function CheckVehicleAvailability({
           if (onClose) onClose();
         }, 1500);
       } else {
-        setMessage("❌ Failed to submit request.");
+        toast.error("❌ Failed to submit request.");
       }
     } catch (err) {
       console.error(err);
-      setMessage("❌ Something went wrong.");
+      toast.error("❌ Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -149,10 +149,6 @@ export default function CheckVehicleAvailability({
           {loading ? "Submitting..." : "Request Information"}
         </button>
       </form>
-
-      {message && (
-        <p className="mt-4 text-sm text-center text-gray-700">{message}</p>
-      )}
     </div>
   );
 }
